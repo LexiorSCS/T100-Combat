@@ -1,0 +1,64 @@
+{
+    "section1": {
+        "files": [
+            {
+                "url": "assets/UI_Mark_B.png",
+                "type": "image",
+                "key": "UI_Mark_B"
+            },
+            {
+                "url": "assets/UI_Mark_G.png",
+                "type": "image",
+                "key": "UI_Mark_G"
+            },
+            {
+                "url": "assets/UI_Mark_R.png",
+                "type": "image",
+                "key": "UI_Mark_R"
+            },
+            {
+                "url": "assets/UI_Mark_W.png",
+                "type": "image",
+                "key": "UI_Mark_W"
+            },
+            {
+                "url": "assets/UI_Mark_Y.png",
+                "type": "image",
+                "key": "UI_Mark_Y"
+            },
+            {
+                "url": "assets/UI_Trap_B.png",
+                "type": "image",
+                "key": "UI_Trap_B"
+            },
+            {
+                "url": "assets/UI_Trap_G.png",
+                "type": "image",
+                "key": "UI_Trap_G"
+            },
+            {
+                "url": "assets/UI_Trap_R.png",
+                "type": "image",
+                "key": "UI_Trap_R"
+            },
+            {
+                "url": "assets/UI_Trap_W.png",
+                "type": "image",
+                "key": "UI_Trap_W"
+            },
+            {
+                "url": "assets/UI_Trap_Y.png",
+                "type": "image",
+                "key": "UI_Trap_Y"
+            }
+        ]
+    },
+    "meta": {
+        "app": "Phaser Editor 2D - Asset Pack Editor",
+        "contentType": "phasereditor2d.pack.core.AssetContentType",
+        "url": "https://phasereditor2d.com",
+        "version": 2,
+        "showAllFilesInBlocks": false,
+        "visible": true
+    }
+}

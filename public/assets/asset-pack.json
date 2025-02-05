@@ -1,0 +1,49 @@
+{
+    "section1": {
+        "files": [
+            {
+                "url": "assets/BattlemapHORIZ.png",
+                "type": "image",
+                "key": "BattlemapHORIZ"
+            },
+            {
+                "url": "assets/FufuSuperDino.png",
+                "type": "image",
+                "key": "FufuSuperDino"
+            },
+            {
+                "url": "assets/1.png",
+                "type": "image",
+                "key": "P_Barrel01_C"
+            },
+            {
+                "url": "assets/2.png",
+                "type": "image",
+                "key": "P_Barrel01_O"
+            },
+            {
+                "url": "assets/P_BarrelEX01_C.png",
+                "type": "image",
+                "key": "P_BarrelEX01_C"
+            },
+            {
+                "url": "assets/R_Lava_M.png",
+                "type": "image",
+                "key": "R_Lava_M"
+            },
+            {
+                "url": "assets/Tile2_28.png",
+                "type": "image",
+                "key": "Tile2_28"
+            }
+        ]
+    },
+    "meta": {
+        "app": "Phaser Editor 2D - Asset Pack Editor",
+        "contentType": "phasereditor2d.pack.core.AssetContentType",
+        "url": "https://phasereditor2d.com",
+        "version": 2,
+        "showAllFilesInBlocks": false,
+        "visible": true
+    }
+}
