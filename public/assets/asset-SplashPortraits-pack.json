@@ -1,0 +1,149 @@
+{
+    "section1": {
+        "files": [
+            {
+                "url": "assets/P_Aandhee_E.png",
+                "type": "image",
+                "key": "P_Aandhee_E"
+            },
+            {
+                "url": "assets/P_Aandhee_F.png",
+                "type": "image",
+                "key": "P_Aandhee_F"
+            },
+            {
+                "url": "assets/P_Aandhee_W.png",
+                "type": "image",
+                "key": "P_Aandhee_W"
+            },
+            {
+                "url": "assets/P_CoachPotato_N.png",
+                "type": "image",
+                "key": "P_CoachPotato_N"
+            },
+            {
+                "url": "assets/P_Huntress_E.png",
+                "type": "image",
+                "key": "P_Huntress_E"
+            },
+            {
+                "url": "assets/P_Huntress_F.png",
+                "type": "image",
+                "key": "P_Huntress_F"
+            },
+            {
+                "url": "assets/P_Huntress_W.png",
+                "type": "image",
+                "key": "P_Huntress_W"
+            },
+            {
+                "url": "assets/P_Linda_E.png",
+                "type": "image",
+                "key": "P_Linda_E"
+            },
+            {
+                "url": "assets/P_Linda_F.png",
+                "type": "image",
+                "key": "P_Linda_F"
+            },
+            {
+                "url": "assets/P_Linda_W.png",
+                "type": "image",
+                "key": "P_Linda_W"
+            },
+            {
+                "url": "assets/P_Penumbra_E.png",
+                "type": "image",
+                "key": "P_Penumbra_E"
+            },
+            {
+                "url": "assets/P_Penumbra_F.png",
+                "type": "image",
+                "key": "P_Penumbra_F"
+            },
+            {
+                "url": "assets/P_Penumbra_W.png",
+                "type": "image",
+                "key": "P_Penumbra_W"
+            },
+            {
+                "url": "assets/P_Sniper_E.png",
+                "type": "image",
+                "key": "P_Sniper_E"
+            },
+            {
+                "url": "assets/P_Sniper_F.png",
+                "type": "image",
+                "key": "P_Sniper_F"
+            },
+            {
+                "url": "assets/P_Sniper_W.png",
+                "type": "image",
+                "key": "P_Sniper_W"
+            },
+            {
+                "url": "assets/P_Tamer_E.png",
+                "type": "image",
+                "key": "P_Tamer_E"
+            },
+            {
+                "url": "assets/P_Tamer_F.png",
+                "type": "image",
+                "key": "P_Tamer_F"
+            },
+            {
+                "url": "assets/P_Tamer_W.png",
+                "type": "image",
+                "key": "P_Tamer_W"
+            },
+            {
+                "url": "assets/S_CoachPotato_N.png",
+                "type": "image",
+                "key": "S_CoachPotato_N"
+            },
+            {
+                "url": "assets/S_Huntress_W.png",
+                "type": "image",
+                "key": "S_Huntress_W"
+            },
+            {
+                "url": "assets/S_Linda (Guardian of the South).png",
+                "type": "image",
+                "key": "S_Linda (Guardian of the South)"
+            },
+            {
+                "url": "assets/S_Penumbra_E.png",
+                "type": "image",
+                "key": "S_Penumbra_E"
+            },
+            {
+                "url": "assets/S_Penumbra_F.png",
+                "type": "image",
+                "key": "S_Penumbra_F"
+            },
+            {
+                "url": "assets/S_Penumbra_W.png",
+                "type": "image",
+                "key": "S_Penumbra_W"
+            },
+            {
+                "url": "assets/S_Sniper.png",
+                "type": "image",
+                "key": "S_Sniper"
+            },
+            {
+                "url": "assets/S_Tamer.png",
+                "type": "image",
+                "key": "S_Tamer"
+            }
+        ]
+    },
+    "meta": {
+        "app": "Phaser Editor 2D - Asset Pack Editor",
+        "contentType": "phasereditor2d.pack.core.AssetContentType",
+        "url": "https://phasereditor2d.com",
+        "version": 2,
+        "showAllFilesInBlocks": false,
+        "visible": true
+    }
+}

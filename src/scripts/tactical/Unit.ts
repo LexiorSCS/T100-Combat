@@ -42,7 +42,9 @@ export class Unit {
      maxHp: number;
      dexterity: number;
      position: Tile;
-     sprite: Phaser.GameObjects.Image;
+     sprite: Phaser.GameObjects.Image; // Token sprite
+     splashArt: Phaser.GameObjects.Image; // Transparent silhouette of a character for close-ups and initiative
+     portrait: Phaser.GameObjects.Image; // 300x300 portrait files for InitiativeUI
      faction: number;
      conditions: string[]; // Track active conditions like "Exposed" or "Crippled"
      remainingTraps: number = 2; // Default number of traps for the Trapper class per battle
@@ -63,7 +65,7 @@ export class Unit {
 
     constructor(scene: CombatScene, tier: UnitTier, name: string, type: string, role: 'Melee' | 'Ranged' = 'Melee' /*Default to Melee*/,
          element: AttackElement, hp: number, maxHp: number, dexterity: number,
-         position: Tile, faction: number, spriteKey: string, remainingTraps: number) 
+         position: Tile, faction: number, spriteKey: string, splashArtKey: string, portraitKey: string) 
     {
         this.scene = scene;
         this.name = name;
@@ -77,7 +79,7 @@ export class Unit {
         this.position.isWalkable = false; // Mark the tile as occupied
         this.faction = faction;
         this.conditions = []; // Start with no conditions
-        this.remainingTraps = remainingTraps;
+        this.remainingTraps = 2;
         this.movementPoints = 0; // Default starting movement points
         this.movementGen = 1; // Default movement points generated per turn
         this.movementCap = 2; // Default maximum movement points
@@ -90,11 +92,18 @@ export class Unit {
             position.y + position.height / 2, // Center vertically
             spriteKey
         );
-////Debug
-     //   // Add health blocks
-     //   console.log('Calling updateHealthBlocks from Unit constructor');
-     //   this.scene.updateHealthBlocks(this);
-////Debug        
+        // Set splash art to the token spriteKey if no splash art exists.
+        if (!splashArtKey || !scene.textures.exists(splashArtKey)) {
+            splashArtKey = spriteKey;
+        }
+        // Set portrait art to the token spriteKey if no portrait art exists.
+        if (!portraitKey || !scene.textures.exists(portraitKey)) {
+            portraitKey = spriteKey;
+        }
+
+        // Assign the portrait texture key
+        this.portrait = scene.add.image(0, 0, portraitKey).setVisible(false); // Ensure it's not visible
+
         // Get original token dimensions and calculate scale
         const frame = scene.textures.getFrame(spriteKey); // Fetch the texture frame
         if (frame) {

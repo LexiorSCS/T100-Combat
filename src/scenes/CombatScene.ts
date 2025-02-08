@@ -18,7 +18,7 @@
 		import { TerrainType } from '../scripts//tactical/Terrain'
 		// Import Combat User Interface (UI) Scene.
 		// import CombatUI from './CombatUI';
-		import { PopupTargeting, PopupWindow } from './CombatUI';
+		import { InitiativeLadder, PopupTargeting, PopupWindow } from './CombatUI';
 		import CombatUI from './CombatUI';
 
 
@@ -115,7 +115,12 @@ hasTurnStarted: boolean;
 		console.log('Creating Action Panel at:', panelX, panelY);
 	
 		// Create the End Turn button
-		const endTurnButton = this.add.text(panelX, panelY, 'End Turn', { fontSize: '20px', color: '#ffffff' }).setDepth(2)
+		const endTurnButton = this.add.text(panelX, panelY, 'End Turn', {
+			 fontSize: '20px',
+			 color: '#ffffff',
+			 stroke: '#000000', // Black outline
+			 strokeThickness: 4, // Thickness of the outline  
+			 }).setDepth(2)
 			.setInteractive()
 			.on('pointerdown', () => {
 				console.log('End Turn button clicked');
@@ -125,7 +130,12 @@ hasTurnStarted: boolean;
 			});
 		
 		// Move Button
-		const moveButton = this.add.text(panelX, panelY + buttonSpacing, 'Move', { fontSize: '20px', color: '#ffffff' })
+		const moveButton = this.add.text(panelX, panelY + buttonSpacing, 'Move', { 
+			fontSize: '20px',
+			color: '#ffffff', // White text
+			stroke: '#092ee8', // Black outline
+			strokeThickness: 4, // Thickness of the outline 
+			})
 		.setDepth(2)
 		.setInteractive()
 			.on('pointerdown', () => {
@@ -158,7 +168,12 @@ hasTurnStarted: boolean;
 
 		// Bash Button
 		const bashButtonText = unit.type === 'Defender' ? 'Pushing Bash' : (unit.type === 'Trapper' && unit.role === 'Ranged' ? 'Ranged Bash' : 'Bash');
-		const bashButton = this.add.text(panelX, panelY + 2 * buttonSpacing, bashButtonText, { fontSize: '20px', color: '#ffffff' })
+		const bashButton = this.add.text(panelX, panelY + 2 * buttonSpacing, bashButtonText, { 
+			 fontSize: '20px',
+			 color: '#ffffff',
+			 stroke: '#e80941', // Black outline
+			 strokeThickness: 4, // Thickness of the outline  	
+			})
 			.setInteractive()
 			.on('pointerdown', () => {
 				const currentUnit = this.initiativeQueue[this.currentUnitIndex];
@@ -240,7 +255,12 @@ hasTurnStarted: boolean;
 		let fortifyButton;
 			if (unit.type === 'Defender') {
 				// Fortify button for Defender
-				fortifyButton = this.add.text(panelX, panelY + 3 * buttonSpacing, 'Fortify', { fontSize: '20px', color: '#ffffff' })
+				fortifyButton = this.add.text(panelX, panelY + 3 * buttonSpacing, 'Fortify', { 
+					fontSize: '20px',
+					color: '#ffffff',
+					stroke: '#e80941', // Black outline
+					strokeThickness: 4, // Thickness of the outline  	
+				   })
 					.setInteractive()
 					.on('pointerdown', () => {
 						// Targeting Mode check
@@ -265,7 +285,12 @@ hasTurnStarted: boolean;
 		// Targeting Mode
 			if (unit.type === 'Expert') {
 				// Pull button for Expert
-				pullButton = this.add.text(panelX, panelY + 3 * buttonSpacing, 'Pull', { fontSize: '20px', color: '#ffffff' })
+				pullButton = this.add.text(panelX, panelY + 3 * buttonSpacing, 'Pull', { 
+					fontSize: '20px',
+					color: '#ffffff',
+					stroke: '#e80941', // Black outline
+					strokeThickness: 4, // Thickness of the outline  	
+				   })
 					.setInteractive()
 					.on('pointerdown', () => {
 					// Targeting Mode
@@ -312,7 +337,12 @@ hasTurnStarted: boolean;
 		// HEALER - Heal
 		let healButton;
 		if (unit.type === 'Healer') {
-			healButton = this.add.text(panelX, panelY + 3 * buttonSpacing, 'Heal', { fontSize: '20px', color: '#ffffff' })
+			healButton = this.add.text(panelX, panelY + 3 * buttonSpacing, 'Heal', { 
+				fontSize: '20px',
+				color: '#ffffff',
+				stroke: '#e80941', // Black outline
+				strokeThickness: 4, // Thickness of the outline  	
+			   })
 				.setInteractive()
 				.on('pointerdown', () => {
 					this.enterModeTargeting('Heal');
@@ -346,7 +376,12 @@ hasTurnStarted: boolean;
 		let setTrapButton;
 		if (unit.type === 'Trapper') {
 			// Set Trap button for Trapper
-			setTrapButton = this.add.text(panelX, panelY + 3 * buttonSpacing, 'Disarm/Set Trap: ' + unit.remainingTraps, { fontSize: '20px', color: '#ffffff' })
+			setTrapButton = this.add.text(panelX, panelY + 3 * buttonSpacing, 'Disarm/Set Trap: ' + unit.remainingTraps, { 
+				fontSize: '20px',
+				color: '#ffffff',
+				stroke: '#e80941', // Black outline
+				strokeThickness: 4, // Thickness of the outline  	
+			   })
 				.setInteractive()
 				.on('pointerdown', () => {
 					if (this.isTargetingMode === false){
@@ -508,128 +543,288 @@ hasTurnStarted: boolean;
 		// Load Unit token assets
 		this.load.pack("assets-tokens-pack", "assets/assets-tokens-pack.json");
 		this.load.pack("asset-UI-pack", "assets/asset-UI-pack.json");
-		this.load.image('P_Barrel01_C', 'path/to/P_Barrel01_C.png');
-    	this.load.image('lavarock1', 'path/to/lavarock1.png');
+		this.load.pack("asset-SplashPortraits-pack", "assets/asset-SplashPortraits-pack.json");
+		// Ensure portrait textures are loaded
 	}
 
 	create() {
-
-		
-
-		// Declare variable for Token Assets
-		const tokenManifest = this.cache.json.get("assets-tokens-pack");
-
-		 this.editorCreate();
-	
-	///////////////////////////////////////////////////////////////////////////////////////////////
-	///////////////////////////////////////////////////////////////////////////////////////////////
-		// Default Combat Scene Initialization
-	///////////////////////////////////////////////////////////////////////////////////////////////
-	///////////////////////////////////////////////////////////////////////////////////////////////
-		
-	
-		// Calculate offsets to center the grid
-        const screenWidth = this.sys.game.config.width as number; // Screen width (1280px)
-        const screenHeight = this.sys.game.config.height as number; // Screen height (760px)
-        const gridWidthPx = GVC.GRID_WIDTH * GVC.CELL_SIZE; // Total grid width in pixels
-        const gridHeightPx = GVC.GRID_HEIGHT * GVC.CELL_SIZE; // Total grid height in pixels
-
-        const offsetX = (screenWidth - gridWidthPx) / 2; // Offset to center the grid horizontally
-        const offsetY = (screenHeight - gridHeightPx) / 2;
-		
-				// Generate the Tiled Battlefield
-				for (let y = 0; y < GVC.GRID_HEIGHT; y++) {
-					const row: Tile[] = [];
-					for (let x = 0; x < GVC.GRID_WIDTH; x++) {
-						const tile = new Tile(this, offsetX + x * GVC.CELL_SIZE, offsetY + y * GVC.CELL_SIZE, GVC.CELL_SIZE, x, y).setOrigin(0);
-						tile.setDepth(0); // Set the Grid to Layer 0 (Background)
-						row.push(tile);
-					}
-					this.grid.push(row);
-				}
-				// Draw the grid lines
-				this.drawGrid();
-		
-				this.placeTerrain(this);
-		
-
-		///////////////////////////////////////////////////////////////////////////////////////////	
-		// Spawn units
-
-		// FACTION 0: Blue Team
-		const huntressTile = this.grid[4][2]; // Starting Position [Y][X]
-		const huntress = new Unit(this /*scene*/, UnitTier.C , "Huntress" /*name*/, "Trapper" /*type (Character Class)*/, 'Ranged' /*Role*/, AttackElement.FIRE /*Element*/, 2 /*hp*/, 2 /*maxHp*/, 5 /*dexterity*/,
-			huntressTile /*Tile*/, 0 /*faction*/, "T_Huntress_F" /*spritekey*/, 2 /*remainingTraps*/);
-		this.units.push(huntress);
-	
-		const sniperTile = this.grid[3][1]; // Starting Position
-		const sniper = new Unit(this /*scene*/, UnitTier.C , "Sniper" /*name*/, "Expert" /*type (Character Class)*/, 'Ranged' /*Role*/, AttackElement.WATER /*Element*/, 2 /*hp*/, 2 /*maxHp*/, 3 /*dexterity*/,
-			 sniperTile /*Tile*/, 0 /*faction*/, "T_Sniper_W" /*spritekey*/, 2 /*remainingTraps*/);
-		this.units.push(sniper);
-
-		const lindaTile = this.grid[4][3]; // Starting Position
-		const linda = new Unit(this /*scene*/, UnitTier.C ,"Linda of the South" /*name*/, "Defender" /*type (Character Class)*/,'Melee' /*Role*/, AttackElement.WATER /*Element*/, 3 /*hp*/, 3 /*maxHp*/, 1 /*dexterity*/,
-			 lindaTile /*Tile*/, 0 /*faction*/, "T_Linda_W" /*spritekey*/, 2 /*remainingTraps*/);
-		this.units.push(linda);
-
-		const tamerTile = this.grid[2][2]; // Starting Position
-		const tamer = new Unit(this /*scene*/, UnitTier.C , "Tamer" /*name*/, "Healer" /*type (Character Class)*/,'Melee' /*Role*/, AttackElement.EARTH /*Element*/, 1 /*hp*/, 1 /*maxHp*/, 2 /*dexterity*/,
-			 tamerTile /*Tile*/, 0 /*faction*/, "T_Tamer_E" /*spritekey*/, 2 /*remainingTraps*/);
-		this.units.push(tamer);
-
-		const aandheeTile = this.grid[1][1]; // Starting Position
-		const aandhee = new Unit(this /*scene*/, UnitTier.C,  "Aandhee" /*name*/, "Warper" /*type (Character Class)*/,'Ranged' /*Role*/, AttackElement.EARTH /*Element*/, 1 /*hp*/, 1 /*maxHp*/, 5 /*dexterity*/,
-			aandheeTile /*Tile*/, 0 /*faction*/, "T_Aandhee_E" /*spritekey*/, 2 /*remainingTraps*/);
-		this.units.push(aandhee);
-
-		// FACTION 1: Red Team
-
-		const penumbraTile = this.grid[2][6]; // Starting Position
-		const penumbra = new Unit(this /*scene*/, UnitTier.C , "Penumbra" /*name*/, "Expert" /*type (Character Class)*/, 'Ranged' /*Role*/ , AttackElement.EARTH /*Element*/, 2 /*hp*/, 2 /*maxHp*/, 3 /*dexterity*/,
-			penumbraTile /*Tile*/, 1 /*faction*/, "T_Penumbra_E" /*spritekey*/, 2 /*remainingTraps*/);
-		this.units.push(penumbra);
-
-		const penumbra2Tile = this.grid[4][5]; // Starting Position
-		const penumbra2 = new Unit(this /*scene*/, UnitTier.C , "Penumbra" /*name*/, "Expert" /*type (Character Class)*/, 'Ranged' /*Role*/ , AttackElement.FIRE /*Element*/, 2 /*hp*/, 2 /*maxHp*/, 3 /*dexterity*/,
-			penumbra2Tile /*Tile*/, 1 /*faction*/, "T_Penumbra_F" /*spritekey*/, 2 /*remainingTraps*/);
-		this.units.push(penumbra2);
-
-		const potatoTile = this.grid[3][6]; // Starting Position
-		const coachPotato = new Unit(this /*scene*/, UnitTier.C , "Coach Potato" /*name*/, "Trapper" /*type (Character Class)*/, 'Melee' /*Role*/, AttackElement.EARTH /*Element*/, 2 /*hp*/, 2 /*maxHp*/, 5 /*dexterity*/,
-			potatoTile /*Tile*/, 1 /*faction*/, "T_CoachPotato_N" /*spritekey*/, 2 /*remainingTraps*/);
-		this.units.push(coachPotato);
-	
-		console.log("Units:", this.units);
-
-		// Update health blocks after units are created
-        this.units.forEach(unit => this.updateHealthBlocks(unit));
-
-		// COMBAT START
-			this.startBattle(); // Roll Initiative & Start the FIRST turn
-			// Roll Initiative
-			//this.rollInitiative();
-			
-
-			// Set the current turn index to 0 to start with the first unit
-			//this.currentTurnIndex = 0;
-
-
-			// Start the first turn
-			//this.startNextTurn();
-			//this.startTurn();
-			
-		
-				////////////////////////	// TEMPORARY HEALTH TESTING //
-				// Grant temporary health to the Trappe
-				this.grantTemporaryHealthToUnit(huntress, 3); // Grant 3 temporary health
-
 		// Launch the CombatUI scene
 		this.scene.launch('CombatUI');
+		// Set CombatUI scene to be on top of CombatScene
+		this.scene.bringToTop('CombatUI');
 
+		// Ensure CombatUI is fully created before proceeding
+		this.scene.get('CombatUI').events.once('create', () => {
+			// Declare variable for Token Assets
+			const tokenManifest = this.cache.json.get("assets-tokens-pack");
+
+			this.editorCreate();
+
+			// Default Combat Scene Initialization
+			// Calculate offsets to center the grid
+			const screenWidth = this.sys.game.config.width as number; // Screen width (1280px)
+			const screenHeight = this.sys.game.config.height as number; // Screen height (760px)
+			const gridWidthPx = GVC.GRID_WIDTH * GVC.CELL_SIZE; // Total grid width in pixels
+			const gridHeightPx = GVC.GRID_HEIGHT * GVC.CELL_SIZE; // Total grid height in pixels
+
+			const offsetX = (screenWidth - gridWidthPx) / 2; // Offset to center the grid horizontally
+			const offsetY = (screenHeight - gridHeightPx) / 2;
+
+			// Generate the Tiled Battlefield
+			for (let y = 0; y < GVC.GRID_HEIGHT; y++) {
+				const row: Tile[] = [];
+				for (let x = 0; x < GVC.GRID_WIDTH; x++) {
+					const tile = new Tile(this, offsetX + x * GVC.CELL_SIZE, offsetY + y * GVC.CELL_SIZE, GVC.CELL_SIZE, x, y).setOrigin(0);
+					tile.setDepth(0); // Set the Grid to Layer 0 (Background)
+					row.push(tile);
+				}
+				this.grid.push(row);
+			}
+			// Draw the grid lines
+			this.drawGrid();
+
+			this.placeTerrain(this);
+
+			 // Helper function to get the first letter of the attack element
+        const getElementLetter = (element: AttackElement) => {
+            switch (element) {
+                case AttackElement.NEUTRAL:
+                    return 'N';
+                case AttackElement.FIRE:
+                    return 'F';
+                case AttackElement.WATER:
+                    return 'W';
+                case AttackElement.EARTH:
+                    return 'E';
+                case AttackElement.LIFE:
+                    return 'L';
+                case AttackElement.BALANCE:
+                    return 'B';
+                case AttackElement.DEATH:
+                    return 'D';
+                default:
+                    return 'N';
+            }
+        };
+
+			// Spawn units
+			// FACTION 0: Blue Team
+			const unit00Element = AttackElement.FIRE;
+			const huntressTile = this.grid[4][2]; // Starting Position [Y][X]
+			const huntress = new Unit(this /*scene*/, UnitTier.C , "Huntress" /*name*/, "Trapper" /*type (Character Class)*/, 'Ranged' /*Role*/, unit00Element /*Element*/, 2 /*hp*/, 2 /*maxHp*/, 5 /*dexterity*/,
+				huntressTile /*Tile*/, 0 /*faction*/, `T_Huntress_${getElementLetter(unit00Element)}` /*spriteKey*/, `S_Huntress_${getElementLetter(unit00Element)}` /*splashArtKey*/, `P_Huntress_${getElementLetter(unit00Element)}` /*portraitKey*/);
+			this.units.push(huntress);
+
+			const unit01Element = AttackElement.WATER;
+			const sniperTile = this.grid[3][1]; // Starting Position
+			const sniper = new Unit(this /*scene*/, UnitTier.C , "Sniper" /*name*/, "Expert" /*type (Character Class)*/, 'Ranged' /*Role*/, unit01Element /*Element*/, 2 /*hp*/, 2 /*maxHp*/, 3 /*dexterity*/,
+				sniperTile /*Tile*/, 0 /*faction*/, `T_Sniper_${getElementLetter(unit01Element)}` /*spriteKey*/, `S_Sniper_${getElementLetter(unit01Element)}` /*splashArtKey*/, `P_Sniper_${getElementLetter(unit01Element)}` /*portraitKey*/);
+			this.units.push(sniper);
+
+			const unit02Element = AttackElement.WATER;
+			const lindaTile = this.grid[4][3]; // Starting Position
+			const linda = new Unit(this /*scene*/, UnitTier.C ,"Linda of the South" /*name*/, "Defender" /*type (Character Class)*/,'Melee' /*Role*/, unit02Element /*Element*/, 3 /*hp*/, 3 /*maxHp*/, 1 /*dexterity*/,
+				lindaTile /*Tile*/, 0 /*faction*/, `T_Linda_${getElementLetter(unit02Element)}` /*spriteKey*/, `S_Linda_${getElementLetter(unit02Element)}` /*splashArtKey*/, `P_Linda_${getElementLetter(unit02Element)}` /*portraitKey*/);
+			this.units.push(linda);
+
+			const unit03Element = AttackElement.EARTH;
+			const tamerTile = this.grid[2][2]; // Starting Position
+			const tamer = new Unit(this /*scene*/, UnitTier.C , "Tamer" /*name*/, "Healer" /*type (Character Class)*/,'Melee' /*Role*/, unit03Element /*Element*/, 1 /*hp*/, 1 /*maxHp*/, 2 /*dexterity*/,
+				tamerTile /*Tile*/, 0 /*faction*/, `T_Tamer_${getElementLetter(unit03Element)}` /*spriteKey*/, `S_Tamer_${getElementLetter(unit03Element)}` /*splashArtKey*/, `P_Tamer_${getElementLetter(unit03Element)}` /*portraitKey*/);
+			this.units.push(tamer);
+
+			const unit04Element = AttackElement.EARTH;
+			const aandheeTile = this.grid[1][1]; // Starting Position
+			const aandhee = new Unit(this /*scene*/, UnitTier.C,  "Aandhee" /*name*/, "Warper" /*type (Character Class)*/,'Ranged' /*Role*/, unit04Element /*Element*/, 1 /*hp*/, 1 /*maxHp*/, 5 /*dexterity*/,
+				aandheeTile /*Tile*/, 0 /*faction*/, `T_Aandhee_${getElementLetter(unit04Element)}` /*spriteKey*/, `S_Aandhee_${getElementLetter(unit04Element)}` /*splashArtKey*/, `P_Aandhee_${getElementLetter(unit04Element)}` /*portraitKey*/);
+			this.units.push(aandhee);
+
+			// FACTION 1: Red Team
+			const unit10Element = AttackElement.EARTH;
+			const penumbraTile = this.grid[2][6]; // Starting Position
+			const penumbra = new Unit(this /*scene*/, UnitTier.C , "Penumbra" /*name*/, "Expert" /*type (Character Class)*/, 'Ranged' /*Role*/ , unit10Element /*Element*/, 2 /*hp*/, 2 /*maxHp*/, 3 /*dexterity*/,
+				penumbraTile /*Tile*/, 1 /*faction*/, `T_Penumbra_${getElementLetter(unit10Element)}` /*spriteKey*/, `S_Penumbra_${getElementLetter(unit10Element)}` /*splashArtKey*/, `P_Penumbra_${getElementLetter(unit10Element)}` /*portraitKey*/);
+			this.units.push(penumbra);
+
+			const unit11Element = AttackElement.FIRE;
+			const penumbra2Tile = this.grid[4][5]; // Starting Position
+			const penumbra2 = new Unit(this /*scene*/, UnitTier.C , "Penumbra" /*name*/, "Expert" /*type (Character Class)*/, 'Ranged' /*Role*/ , unit11Element /*Element*/, 2 /*hp*/, 2 /*maxHp*/, 3 /*dexterity*/,
+				penumbra2Tile /*Tile*/, 1 /*faction*/, `T_Penumbra_${getElementLetter(unit11Element)}` /*spriteKey*/, `S_Penumbra_${getElementLetter(unit11Element)}` /*splashArtKey*/, `P_Penumbra_${getElementLetter(unit11Element)}` /*portraitKey*/);
+			this.units.push(penumbra2);
+
+			const unit12Element = AttackElement.NEUTRAL;
+			const potatoTile = this.grid[3][6]; // Starting Position
+			const coachPotato = new Unit(this /*scene*/, UnitTier.C , "Coach Potato" /*name*/, "Trapper" /*type (Character Class)*/, 'Melee' /*Role*/, unit12Element /*Element*/, 2 /*hp*/, 2 /*maxHp*/, 5 /*dexterity*/,
+				potatoTile /*Tile*/, 1 /*faction*/, `T_CoachPotato_${getElementLetter(unit12Element)}` /*spriteKey*/, `S_CoachPotato_${getElementLetter(unit12Element)}` /*splashArtKey*/, `P_CoachPotato_${getElementLetter(unit12Element)}` /*portraitKey*/);
+			this.units.push(coachPotato);
+
+			console.log("Units:", this.units);
+
+			// Update health blocks after units are created
+			this.units.forEach(unit => this.updateHealthBlocks(unit));
+
+			// COMBAT START
+			this.startBattle(); // Roll Initiative & Start the FIRST turn
+
+			
+		});
 	}
-	/* END-CREATE-CODE */
 
+	///////////////////////////////////////////////////////////////////////////////////////////////
+	///////////////////////////////////////////////////////////////////////////////////////////////
+		// TURN BASED SYSTEM
+	///////////////////////////////////////////////////////////////////////////////////////////////
+	///////////////////////////////////////////////////////////////////////////////////////////////
+	// Declare the current turn index
+	//currentTurnIndex = 1;
 	
+	// Roll Initiative
+	rollInitiative() {
+    this.units.forEach(unit => {
+        unit.initiative = Phaser.Math.Between(1, 10) + unit.dexterity;
+        console.log(`${unit.name} | Initiative roll: ${unit.initiative - unit.dexterity} + ${unit.dexterity} = ${unit.initiative}`);
+    });
+
+    // Sort by initiative and dexterity
+    this.initiativeQueue = [...this.units].sort((a, b) => {
+        if (b.initiative !== a.initiative) {
+            return b.initiative - a.initiative; // Higher initiative goes first
+        } else if (b.dexterity !== a.dexterity) {
+            console.log(`Initiative tie at score: ${a.initiative}! Dexterity contest | ${b.name}: ${b.dexterity} vs ${a.name}: ${a.dexterity}.`);
+            if (a.dexterity > b.dexterity) {
+                console.log(`${a.name} goes before ${b.name}.`);
+            } else {
+                console.log(`${b.name} goes before ${a.name}.`);
+            }
+            return b.dexterity - a.dexterity; // Higher dexterity goes first if initiative is tied
+        } else {
+            // Resolve remaining ties with d10 rolls
+            console.log(`Double Initiative tie at score: ${a.initiative}! 1d10 dice roll contest | ${b.name} vs ${a.name}.`);
+            let rollA, rollB;
+            do {
+                rollA = Phaser.Math.Between(1, 10);
+                console.log(`${a.name} rolls ${rollA}.`);
+                rollB = Phaser.Math.Between(1, 10);
+                console.log(`${b.name} rolls ${rollB}.`);
+                if (rollA === rollB)
+                    console.log('Reroll!');
+            } while (rollA === rollB);
+            if (rollA > rollB) {
+                console.log(`${a.name} goes before ${b.name}.`);
+            } else {
+                console.log(`${b.name} goes before ${a.name}.`);
+            }
+            return rollB - rollA; // Higher d10 roll goes first
+        }
+    });
+
+    console.log("Initiative Order:", this.initiativeQueue.map(u => `${u.name} (${u.initiative})`));
+}
+
+	// Initiate Combat
+	startBattle() {
+        this.rollInitiative();
+        this.currentUnitIndex = 0; // Ensure the first unit in the initiative queue starts
+        this.startTurn();
+    }
+	// Advance Turns
+	startNextTurn() {
+		if (this.initiativeQueue.length === 0) return;
+
+		this.clearHighlights();
+		this.clearActiveUnitHighlight();
+		this.clearAllInteractivity(); // Clear all interactivity from previous turn
+	
+		// Get the next current unit
+		this.currentUnitIndex = (this.currentUnitIndex + 1) % this.initiativeQueue.length;
+        const currentUnit = this.initiativeQueue[this.currentUnitIndex];
+        console.log(`It's ${currentUnit.name}'s turn!`);
+		// remove the current unit's UI buttons
+			this.deleteActionPanel();
+		// Check if the current unit is still alive
+		if (currentUnit) {
+			// Remove temporary health from the unit at the start of their turn
+			currentUnit.removeTemporaryHealth();
+		
+			currentUnit.sprite.setTint(GVC.UNIT_COLOR_HIGHLIGHT_CURRENT); // Highlight active unit
+			const previousUnit = this.initiativeQueue[(this.currentUnitIndex - 1 + this.initiativeQueue.length) % this.initiativeQueue.length];
+			this.moveFactionIndicator(previousUnit, 0); // Move previous unit's indicator back to 0
+		}
+	
+		this.startTurn();
+	}
+	// Initiating the start of the Turn
+	startTurn() {
+		this.clearHighlights(); // Clear highlights at the start of the turn
+		this.clearActiveUnitHighlight();
+		this.isTargetingMode = false;
+    	this.currentTarget = null;
+    	this.currentSkill = null;
+		this.updateUI();
+
+		// Create the Action Panel for the starting unit
+		if (this.initiativeQueue.length > 0) {
+			const currentUnit = this.initiativeQueue[this.currentUnitIndex];
+			this.createActionPanel(currentUnit);
+			// Apply lava damage if the unit is standing in lava
+			if (currentUnit.position.terrain?.type === TerrainType.LAVA) {
+				console.log(`${currentUnit.name} takes 2 damage from standing in lava!`);
+				currentUnit.takeDamage(this /*scene*/, 2 /*damage*/, currentUnit /*attacker*/, AttackType.TERRAIN, AttackElement.FIRE , false /*isUpgradeActive*/  );
+				this.updateHealthBlocks(currentUnit);
+				// Check if the unit is still alive after taking damage
+				if (currentUnit.hp <= 0) {
+					this.removeUnit(currentUnit);
+					this.startNextTurn(); // Move to the next turn if the unit dies
+					return;
+				}
+			}
+			currentUnit.gainMovementPoints();
+			currentUnit.sprite.setTint(GVC.UNIT_COLOR_HIGHLIGHT_CURRENT); // Highlight active unit
+			console.log(`Starting turn for ${currentUnit.name}`);
+			this.moveFactionIndicator(currentUnit, -45); // Move current unit's indicator to -45
+		}
+	}
+
+	// Update the Initiative Ladder UI
+	updateUI(){
+		const combatUI = this.scene.get('CombatUI') as CombatUI;
+		if (combatUI && combatUI.scene.isActive()) {
+			combatUI.events.emit('updateInitiative', this.initiativeQueue.map(unit => ({
+				name: unit.name,
+				initiative: unit.initiative,
+				portraitKey: unit.portrait ? unit.portrait.texture.key : unit.sprite.texture.key, // Ensure portrait is used if available
+				faction: unit.faction // Ensure faction is passed
+			})), this.currentUnitIndex);
+		}
+	}
+
+	// Remove Units from the Initiative Tracker
+	removeUnit(unit: Unit) {
+		this.units = this.units.filter(u => u !== unit);
+		this.initiativeQueue = this.initiativeQueue.filter(u => u !== unit); // Remove from initiative queue
+		console.log(`${unit.name} has been removed from the units array and initiative queue.`);
+	}
+
+	// Clear all interactivity from previous turn
+	clearAllInteractivity() {
+		this.units.forEach(unit => {
+			unit.sprite.removeAllListeners();
+			unit.sprite.disableInteractive();
+		});
+		this.terrains.forEach(terrain => {
+			if (terrain.sprite && terrain.sprite.input) {
+				terrain.sprite.removeAllListeners();
+				terrain.sprite.disableInteractive();
+			}
+		});
+		this.grid.forEach(row => {
+			row.forEach(tile => {
+				tile.removeTargetingListeners(); // Use the new method to remove targeting listeners
+			});
+		});
+	}
+
+		
 	///////////////////////////////////////////////////////////////////////////////////////////////
 	///////////////////////////////////////////////////////////////////////////////////
     // HEALTH BLOCKS LOGIC
@@ -711,140 +906,6 @@ hasTurnStarted: boolean;
         }
     }
 
-	///////////////////////////////////////////////////////////////////////////////////////////////
-	///////////////////////////////////////////////////////////////////////////////////////////////
-		// TURN BASED SYSTEM
-	///////////////////////////////////////////////////////////////////////////////////////////////
-	///////////////////////////////////////////////////////////////////////////////////////////////
-	// Declare the current turn index
-	//currentTurnIndex = 1;
-	
-	// Roll Initiative
-	rollInitiative() {
-    this.units.forEach(unit => {
-        unit.initiative = Phaser.Math.Between(1, 10) + unit.dexterity;
-        console.log(`${unit.name} | Initiative roll: ${unit.initiative - unit.dexterity} + ${unit.dexterity} = ${unit.initiative}`);
-    });
-
-    // Sort by initiative and dexterity
-    this.initiativeQueue = [...this.units].sort((a, b) => {
-        if (b.initiative !== a.initiative) {
-            return b.initiative - a.initiative; // Higher initiative goes first
-        } else if (b.dexterity !== a.dexterity) {
-            console.log(`Initiative tie at score: ${a.initiative}! Dexterity contest | ${b.name}: ${b.dexterity} vs ${a.name}: ${a.dexterity}.`);
-            if (a.dexterity > b.dexterity) {
-                console.log(`${a.name} goes before ${b.name}.`);
-            } else {
-                console.log(`${b.name} goes before ${a.name}.`);
-            }
-            return b.dexterity - a.dexterity; // Higher dexterity goes first if initiative is tied
-        } else {
-            // Resolve remaining ties with d10 rolls
-            console.log(`Double Initiative tie at score: ${a.initiative}! 1d10 dice roll contest | ${b.name} vs ${a.name}.`);
-            let rollA, rollB;
-            do {
-                rollA = Phaser.Math.Between(1, 10);
-                console.log(`${a.name} rolls ${rollA}.`);
-                rollB = Phaser.Math.Between(1, 10);
-                console.log(`${b.name} rolls ${rollB}.`);
-                if (rollA === rollB)
-                    console.log('Reroll!');
-            } while (rollA === rollB);
-            if (rollA > rollB) {
-                console.log(`${a.name} goes before ${b.name}.`);
-            } else {
-                console.log(`${b.name} goes before ${a.name}.`);
-            }
-            return rollB - rollA; // Higher d10 roll goes first
-        }
-    });
-
-    console.log("Initiative Order:", this.initiativeQueue.map(u => `${u.name} (${u.initiative})`));
-}
-
-	// Initiate Combat
-	startBattle() {
-        this.rollInitiative();
-        this.currentUnitIndex = 0; // Ensure the first unit in the initiative queue starts
-        this.startTurn();
-    }
-	// Advance Turns
-	startNextTurn() {
-		if (this.initiativeQueue.length === 0) return;
-
-		this.clearHighlights();
-		this.clearActiveUnitHighlight();
-		this.clearAllInteractivity(); // Clear all interactivity from previous turn
-	
-		// Get the current unit
-		this.currentUnitIndex = (this.currentUnitIndex + 1) % this.initiativeQueue.length;
-        const currentUnit = this.initiativeQueue[this.currentUnitIndex];
-        console.log(`It's ${currentUnit.name}'s turn!`);
-		// remove the current unit's UI buttons
-			this.deleteActionPanel();
-		// Check if the current unit is still alive
-		if (currentUnit) {
-			// Remove temporary health from the unit at the start of their turn
-			currentUnit.removeTemporaryHealth();
-		
-			currentUnit.sprite.setTint(GVC.UNIT_COLOR_HIGHLIGHT_CURRENT); // Highlight active unit
-		}
-	
-		this.startTurn();
-	}
-	// Initiating the start of the Turn
-	startTurn() {
-		this.clearHighlights(); // Clear highlights at the start of the turn
-		this.clearActiveUnitHighlight();
-		this.isTargetingMode = false;
-    	this.currentTarget = null;
-    	this.currentSkill = null;
-
-		// Create the Action Panel for the unit
-		if (this.initiativeQueue.length > 0) {
-			const currentUnit = this.initiativeQueue[this.currentUnitIndex];
-			this.createActionPanel(currentUnit);
-			// Apply lava damage if the unit is standing in lava
-			if (currentUnit.position.terrain?.type === TerrainType.LAVA) {
-				console.log(`${currentUnit.name} takes 2 damage from standing in lava!`);
-				currentUnit.takeDamage(this /*scene*/, 2 /*damage*/, currentUnit /*attacker*/, AttackType.TERRAIN, AttackElement.FIRE , false /*isUpgradeActive*/  );
-				this.updateHealthBlocks(currentUnit);
-				// Check if the unit is still alive after taking damage
-				if (currentUnit.hp <= 0) {
-					this.removeUnit(currentUnit);
-					this.startNextTurn(); // Move to the next turn if the unit dies
-					return;
-				}
-			}
-			currentUnit.gainMovementPoints();
-			currentUnit.sprite.setTint(GVC.UNIT_COLOR_HIGHLIGHT_CURRENT); // Highlight active unit
-			console.log(`Starting turn for ${currentUnit.name}`);
-		}
-	}
-	// Clear all interactivity from previous turn
-	clearAllInteractivity() {
-		this.units.forEach(unit => {
-			unit.sprite.removeAllListeners();
-			unit.sprite.disableInteractive();
-		});
-		this.terrains.forEach(terrain => {
-			if (terrain.sprite && terrain.sprite.input) {
-				terrain.sprite.removeAllListeners();
-				terrain.sprite.disableInteractive();
-			}
-		});
-		this.grid.forEach(row => {
-			row.forEach(tile => {
-				tile.removeTargetingListeners(); // Use the new method to remove targeting listeners
-			});
-		});
-	}
-	// Remove Units from the Initiative Tracker
-	removeUnit(unit: Unit) {
-		this.units = this.units.filter(u => u !== unit);
-		this.initiativeQueue = this.initiativeQueue.filter(u => u !== unit); // Remove from initiative queue
-		console.log(`${unit.name} has been removed from the units array and initiative queue.`);
-	}
 	// TEMPORARY HEALTH EXECUTION
 	grantTemporaryHealthToUnit(unit: Unit, amount: number) {
 		unit.grantTemporaryHealth(amount);
@@ -1092,8 +1153,7 @@ hasTurnStarted: boolean;
 	highlightCurrentUnit (){
 		const currentUnit = this.initiativeQueue[this.currentUnitIndex];
 		currentUnit.sprite.setTint(GVC.UNIT_COLOR_HIGHLIGHT_CURRENT); // Highlight active unit
-	}
-	
+	}	
 
 	getTileNeighbors(tile: Tile): Tile[] {
 		const neighbors: Tile[] = [];
@@ -1165,6 +1225,13 @@ hasTurnStarted: boolean;
 				terrain.sprite.removeInteractive();
 			}
 		});
+	}
+
+	moveFactionIndicator(unit: Unit, y: number) {
+		const combatUI = this.scene.get('CombatUI') as CombatUI;
+		if (combatUI && combatUI.scene.isActive()) {
+			combatUI.events.emit('moveFactionIndicator', unit, y);
+		}
 	}
 
 	///////////////////////////////////////////////////////////////////////////////////////////////
