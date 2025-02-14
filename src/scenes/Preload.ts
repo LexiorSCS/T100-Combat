@@ -81,7 +81,7 @@ export default class Preload extends Phaser.Scene {
 		}
 		
 		this.scene.start("CombatScene");
-		console.log(`The Hundred - Combat System devbuild 1.05 | Initiative Ladder UI`);
+		console.log(`The Hundred - Combat System devbuild 1.06 | Initiative Ladder UI + Collision System`);
 	}
 
 	/* END-USER-CODE */

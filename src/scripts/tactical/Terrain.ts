@@ -30,8 +30,9 @@ export class Terrain {
     sprite: Phaser.GameObjects.Image;
     isDestructible: boolean; // Marks if this terrain can be targeted
     scene: CombatScene; // Reference to the CombatScene
+    movable: boolean; // Marks if this terrain can be moved
 
-    constructor(scene: Phaser.Scene, name: string, type: TerrainType, hp: number, position: Tile, spriteKey: string, isDestructible: boolean) {
+    constructor(scene: Phaser.Scene, name: string, type: TerrainType, hp: number, position: Tile, spriteKey: string, isDestructible: boolean, movable: boolean) {
         this.scene = scene as CombatScene;
         this.name = name;
         this.type = type; // Assign the type directly as a TerrainType
@@ -40,6 +41,7 @@ export class Terrain {
         this.position = position;
         this.position.isWalkable = false; // Mark the tile as occupied
         this.isDestructible = isDestructible;
+        this.movable = movable;
 
         // Calculate the position based on grid coordinates
         const x = position.x;
@@ -74,6 +76,10 @@ export class Terrain {
         // Modify the tile's walkability based on terrain type
         if (this.type === TerrainType.PIT) {
             position.isWalkable = false; // Pits are not walkable
+        }
+        if (this.type === TerrainType.LAVA) {
+            position.isWalkable = false; // Lava is not walkable
+            position.isHazard = true; // Mark as hazard
         }
         if (!scene.textures.exists(spriteKey)) {
             console.warn(`Texture ${spriteKey} not found. Tinting may not apply.`);

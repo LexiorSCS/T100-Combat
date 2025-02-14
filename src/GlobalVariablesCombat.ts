@@ -3,7 +3,8 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////
 export const GRID_WIDTH = 8; // Number of tiles horizontally
 export const GRID_HEIGHT = 5; // Number of tiles vertically
-export const CELL_SIZE = 128; // Pixel size of each tile
+export const CELL_SIZE = 116; // Pixel size of each tile
+//  (Previously: 128px | 116px (24px of extra space for UI, both vertical and horizontal))
 
 // Default Tile Colors
 export const TILE_COLOR_DEFAULT = 0xc7f2c9; // Pale green (default tile color)

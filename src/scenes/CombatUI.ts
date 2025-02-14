@@ -139,8 +139,8 @@ export class InitiativeLadder {
 
     constructor(scene: Phaser.Scene) {
         this.scene = scene;
-        // Starting position of the whole Tracker
-        this.entryContainer = this.scene.add.container(GVC.CELL_SIZE * 1.515, 24).setDepth(5);
+        // Initialize the entry container
+        this.entryContainer = this.scene.add.container(0, 24).setDepth(5);
     }
 
     updateInitiativeLadder(queue: { name: string, initiative: number, portraitKey: string, faction: number, element: AttackElement }[], activeUnitIndex: number) {
@@ -148,7 +148,7 @@ export class InitiativeLadder {
             let entryContainer = this.unitEntries[index];
 
             if (!entryContainer) {
-                entryContainer = this.scene.add.container(index * 128, 0);
+                entryContainer = this.scene.add.container(index * GVC.CELL_SIZE, 0);
                 this.unitEntries[index] = entryContainer;
                 this.entryContainer.add(entryContainer);
             }
@@ -173,10 +173,8 @@ export class InitiativeLadder {
                 unitImage = this.scene.add.image(0, 7, unit.portraitKey)
                     .setDisplaySize(64, 64);
                 entryContainer.add(unitImage);
-                console.log(`Avatar missing. Unit texture equal to = ${unit.portraitKey}`);
             } else {
                 unitImage.setTexture(unit.portraitKey);
-                console.log(`Avatar exists. Unit texture equal to = ${unit.portraitKey}`);
             }
             unitImage.setTint(index === activeUnitIndex ? 0xffff00 : 0xffffff);
 
@@ -185,10 +183,8 @@ export class InitiativeLadder {
             if (!elementIndicator) {
                 elementIndicator = this.scene.add.image(-52, 24, `Element_Crystal_${unitElement}`).setDisplaySize(18, 27).setOrigin(0.5);
                 entryContainer.add(elementIndicator);
-                console.log(`Element missing. Element texture equal to = Element_Crystal_${unitElement}`);
             } else {
                 elementIndicator.setTexture(`Element_Crystal_${unitElement}`);
-                console.log(`Element exists. Element texture equal to = Element_Crystal_${unitElement}`);
             }
 
             let unitInit = entryContainer.list.find(obj => obj instanceof Phaser.GameObjects.Text) as Phaser.GameObjects.Text;
@@ -256,7 +252,10 @@ export class InitiativeLadder {
             this.unitEntries[i].destroy();
         }
         this.unitEntries.length = queue.length;
-    }
+
+        // Center the entry container horizontally
+        const totalWidth = this.unitEntries.reduce((sum, entry) => sum + entry.getBounds().width , 0) + 2 * this.unitEntries.length - 36;
+        this.entryContainer.setX((this.scene.cameras.main.width - totalWidth) / 2);    }
 
     clearLadder() {
         this.unitEntries.forEach(entry => entry.destroy());
@@ -281,28 +280,20 @@ export class InitiativeLadder {
     getUnitElement(element: AttackElement): string {
         switch (element) {
             case AttackElement.EARTH:
-                console.log('Element is Earth');
                 return 'E';
             case AttackElement.FIRE:
-                console.log('Element is Fire');
                 return 'F';
             case AttackElement.WATER:
-                console.log('Element is Water');
                 return 'W';
             case AttackElement.NEUTRAL:
-                console.log('Element is Neutral');
                 return 'N';
             case AttackElement.LIFE:
-                console.log('Element is Life');
                 return 'L';
             case AttackElement.DEATH:
-                console.log('Element is Death');
                 return 'D';
             case AttackElement.BALANCE:
-                console.log('Element is Balance');
                 return 'B';
             default:
-                console.log('Element is Default (Neutral)');
                 return 'N';
         }
     }
@@ -321,6 +312,7 @@ export class InitiativeLadder {
 export default class CombatUI extends Phaser.Scene {
     private initiativeLadder: InitiativeLadder;
     private windowStack: (() => void)[] = [];
+    private roundCounterText: Phaser.GameObjects.Text; // Add a property for the round counter
 
     constructor() {
         super("CombatUI");
@@ -334,6 +326,14 @@ export default class CombatUI extends Phaser.Scene {
         this.initiativeLadder = new InitiativeLadder(this);
         this.editorCreate();
 
+        // Create the round counter text
+        this.roundCounterText = this.add.text(this.cameras.main.width / 2, 76, 'Round: ', {
+            fontSize: '24px',
+            color: '#ffffff',
+            stroke: '#000000',
+            strokeThickness: 5,
+        }).setOrigin(0.5).setDepth(5);
+
         // Ensure the initiative ladder is updated after creation
         this.events.on('updateInitiative', (queue: { name: string, initiative: number, portraitKey: string, faction: number, element: AttackElement }[], activeUnitIndex: number) => {
             this.updateInitiative(queue, activeUnitIndex);
@@ -345,6 +345,16 @@ export default class CombatUI extends Phaser.Scene {
         this.events.on('moveFactionIndicator', (unit: Unit, y: number) => {
             this.moveFactionIndicator(unit, y);
         });
+
+        // Listen for round counter updates
+        this.events.on('updateRoundCounter', (round: number) => {
+            this.updateRoundCounter(round);
+        });
+    }
+
+    // Method to update the round counter text
+    updateRoundCounter(round: number) {
+        this.roundCounterText.setText(`Round: ${round}`);
     }
 
     preload() {

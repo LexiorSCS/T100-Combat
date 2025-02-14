@@ -47,6 +47,16 @@
                 "key": "UI_Mark_Y"
             },
             {
+                "url": "assets/UI_Target_G.png",
+                "type": "image",
+                "key": "UI_Target_G"
+            },
+            {
+                "url": "assets/UI_Target_R.png",
+                "type": "image",
+                "key": "UI_Target_R"
+            },
+            {
                 "url": "assets/UI_Trap_B.png",
                 "type": "image",
                 "key": "UI_Trap_B"

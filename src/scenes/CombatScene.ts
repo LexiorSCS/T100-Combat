@@ -40,6 +40,7 @@ popupTargetingInstance: PopupTargeting | null = null;
 initiativeQueue: Unit[] = []; // Priority queue for turn order
 currentUnitIndex: number = 0; // Tracks whose turn it is
 hasTurnStarted: boolean;
+round: number = 1; // Track the current round
 
 	constructor() {
 		super("CombatScene");
@@ -210,7 +211,7 @@ hasTurnStarted: boolean;
 					}
 					// Trapper's MELEE/RANGED Bash variant
 					else if (currentUnit.type === 'Trapper') {
-						this.handleTrapperAttack(unit);
+						currentUnit.handleTrapperAttack(currentUnit);
 					}
 					// Generic Bash
 					else {
@@ -384,7 +385,7 @@ hasTurnStarted: boolean;
 			   })
 				.setInteractive()
 				.on('pointerdown', () => {
-					if (this.isTargetingMode === false){
+					if (this.isTargetingMode === false && !this.popupTargetingInstance) {
 						const combatUI = this.scene.get('CombatUI') as CombatUI;
 						if (combatUI) {
 							console.log('Creating PopupWindow'); // Add this line
@@ -398,9 +399,18 @@ hasTurnStarted: boolean;
 									console.log('Set Trap selected.');
 									if (unit.remainingTraps > 0) {
 										console.log('User has traps remaining.');
-										const validTiles = this.getTilesInRange(unit.position.gridX, unit.position.gridY, 1).filter(
-											tile => tile.isWalkable
+										const adjacentDefender = this.units.find(
+											defender => defender.type === 'Defender' && this.isAdjacent(unit.position, defender.position) && unit.faction === defender.faction
 										);
+										const validTiles = this.getTilesInRange(unit.position.gridX, unit.position.gridY, 1).filter(
+											tile => tile.isWalkable && !tile.isTrapped
+										);
+										if (adjacentDefender) {
+											const defenderAdjacentTiles = this.getTilesInRange(adjacentDefender.position.gridX, adjacentDefender.position.gridY, 1).filter(
+												tile => tile.isWalkable && !tile.isTrapped
+											);
+											validTiles.push(...defenderAdjacentTiles);
+										}
 				
 										validTiles.forEach(tile => {
 											tile.setFillStyle(GVC.TILE_COLOR_TRAP); // Highlight valid tiles
@@ -410,8 +420,9 @@ hasTurnStarted: boolean;
 												this.leaveModeTargeting();
 												unit.setTrap(this /*scene*/, tile /*where*/, true /*isQuizActive*/, false /*isUpgradeActive*/, false /*isQuizCorrect*/);
 												this.clearHighlights();
-												this.isActionComplete = true; // Mark action as complete
-												this.startNextTurn(); // End turn after placing trap
+												if (unit.isActionComplete) {
+													this.startNextTurn(); // End turn after placing trap
+												}
 											});
 										});	
 									}
@@ -434,8 +445,9 @@ hasTurnStarted: boolean;
 												this.leaveModeTargeting();
 												unit.disarmTrap(this /*scene*/, tile /*where*/);
 												this.clearHighlights();
-												this.isActionComplete = true; // Mark action as complete
-												this.startNextTurn(); // End turn after disarming trap
+												if (unit.isActionComplete) {
+													this.startNextTurn(); // End turn after disarming trap
+												}
 											});
 										});
 									
@@ -496,36 +508,11 @@ hasTurnStarted: boolean;
             target.sprite.once('pointerdown', () => {
 				this.clearAllInteractivity(); // Clear all interactivity before executing action
                 this.leaveModeTargeting();
-                this.resolveTrapperAttack(unit, target, isRanged);
+                unit.resolveTrapperAttack(unit, target, isRanged);
                 this.clearHighlights();
                 this.startNextTurn();
             });
         });
-    }
-
-    resolveTrapperAttack(trapper: Unit, target: Unit, isRanged: boolean) {
-        const adjacentDefender = this.units.find(
-            unit => unit.type === 'Defender' && this.isAdjacent(unit.position, target.position)
-        );
-
-        if (isRanged) {
-            console.log(`${trapper.name} shoots ${target.name}`);
-            target.conditions.push('Befuddled'); // Bestow 'Befuddled' condition
-            console.log(`${target.name} is now Befuddled.`);
-            if (adjacentDefender) {
-                console.log(`Defender holds the flank! ${target.name} is pushed 1 square away.`);
-                trapper.push(this, target, trapper, 1);
-            }
-        } else {
-            console.log(`${trapper.name} strikes ${target.name}`);
-            target.takeDamage(this, 1, trapper, AttackType.MELEE, trapper.element, trapper.isUpgraded); // Deal melee damage
-            if (adjacentDefender) {
-                console.log(`Defender supports the flanker! ${target.name} takes 1 additional damage.`);
-                target.takeDamage(this, 1, trapper, AttackType.MELEE, trapper.element, trapper.isUpgraded);
-            }
-        }
-
-        this.updateHealthBlocks(target);
     }
 	//////////////////////////////////////////////////////////////////////////////
 
@@ -642,13 +629,13 @@ hasTurnStarted: boolean;
 			// FACTION 1: Red Team
 			const unit10Element = AttackElement.EARTH;
 			const penumbraTile = this.grid[2][6]; // Starting Position
-			const penumbra = new Unit(this /*scene*/, UnitTier.C , "Penumbra" /*name*/, "Expert" /*type (Character Class)*/, 'Ranged' /*Role*/ , unit10Element /*Element*/, 2 /*hp*/, 2 /*maxHp*/, 3 /*dexterity*/,
+			const penumbra = new Unit(this /*scene*/, UnitTier.C , "Penumbra" /*name*/, "Expert" /*type (Character Class)*/, 'Ranged' /*Role*/ , unit10Element /*Element*/, 1 /*hp*/, 2 /*maxHp*/, 3 /*dexterity*/,
 				penumbraTile /*Tile*/, 1 /*faction*/, `T_Penumbra_${getElementLetter(unit10Element)}` /*spriteKey*/, `S_Penumbra_${getElementLetter(unit10Element)}` /*splashArtKey*/, `P_Penumbra_${getElementLetter(unit10Element)}` /*portraitKey*/);
 			this.units.push(penumbra);
 
 			const unit11Element = AttackElement.FIRE;
 			const penumbra2Tile = this.grid[4][5]; // Starting Position
-			const penumbra2 = new Unit(this /*scene*/, UnitTier.C , "Penumbra" /*name*/, "Expert" /*type (Character Class)*/, 'Ranged' /*Role*/ , unit11Element /*Element*/, 2 /*hp*/, 2 /*maxHp*/, 3 /*dexterity*/,
+			const penumbra2 = new Unit(this /*scene*/, UnitTier.C , "Penumbra" /*name*/, "Expert" /*type (Character Class)*/, 'Ranged' /*Role*/ , unit11Element /*Element*/, 1 /*hp*/, 2 /*maxHp*/, 3 /*dexterity*/,
 				penumbra2Tile /*Tile*/, 1 /*faction*/, `T_Penumbra_${getElementLetter(unit11Element)}` /*spriteKey*/, `S_Penumbra_${getElementLetter(unit11Element)}` /*splashArtKey*/, `P_Penumbra_${getElementLetter(unit11Element)}` /*portraitKey*/);
 			this.units.push(penumbra2);
 
@@ -726,6 +713,7 @@ hasTurnStarted: boolean;
         this.rollInitiative();
         this.currentUnitIndex = 0; // Ensure the first unit in the initiative queue starts
         this.startTurn();
+		this.roundStart(); // Trigger round start event
     }
 	// Advance Turns
 	startNextTurn() {
@@ -750,9 +738,38 @@ hasTurnStarted: boolean;
 			const previousUnit = this.initiativeQueue[(this.currentUnitIndex - 1 + this.initiativeQueue.length) % this.initiativeQueue.length];
 			this.moveFactionIndicator(previousUnit, 0); // Move previous unit's indicator back to 0
 		}
+
+		// Check if a new round should start
+		if (this.currentUnitIndex === 0) {
+			this.roundEnd(); // Trigger round end event
+			this.round++;
+			this.roundStart(); // Trigger round start event
+		}
 	
 		this.startTurn();
 	}
+
+	// Round start event
+	roundStart() {
+		console.log(`Round ${this.round} starts!`);
+		this.updateRoundCounter();
+		// Additional logic for round start can be added here
+	}
+
+	// Round end event
+	roundEnd() {
+		console.log(`Round ${this.round} ends!`);
+		// Additional logic for round end can be added here
+	}
+
+	// Update the round counter in the UI
+	updateRoundCounter() {
+		const combatUI = this.scene.get('CombatUI') as CombatUI;
+		if (combatUI && combatUI.scene.isActive()) {
+			combatUI.events.emit('updateRoundCounter', this.round);
+		}
+	}
+
 	// Initiating the start of the Turn
 	startTurn() {
 		this.clearHighlights(); // Clear highlights at the start of the turn
@@ -765,6 +782,7 @@ hasTurnStarted: boolean;
 		// Create the Action Panel for the starting unit
 		if (this.initiativeQueue.length > 0) {
 			const currentUnit = this.initiativeQueue[this.currentUnitIndex];
+			currentUnit.turn = this.round; // Update the unit's turn count
 			this.createActionPanel(currentUnit);
 			// Apply lava damage if the unit is standing in lava
 			if (currentUnit.position.terrain?.type === TerrainType.LAVA) {
@@ -780,7 +798,7 @@ hasTurnStarted: boolean;
 			}
 			currentUnit.gainMovementPoints();
 			currentUnit.sprite.setTint(GVC.UNIT_COLOR_HIGHLIGHT_CURRENT); // Highlight active unit
-			console.log(`Starting turn for ${currentUnit.name}`);
+			console.log(`Starting turn ${currentUnit.turn} for ${currentUnit.name}`);
 			this.moveFactionIndicator(currentUnit, -45); // Move current unit's indicator to -45
 		}
 	}
@@ -793,7 +811,8 @@ hasTurnStarted: boolean;
 				name: unit.name,
 				initiative: unit.initiative,
 				portraitKey: unit.portrait ? unit.portrait.texture.key : unit.sprite.texture.key, // Ensure portrait is used if available
-				faction: unit.faction // Ensure faction is passed
+				faction: unit.faction, // Ensure faction is passed
+				element: unit.element // Ensure element is passed
 			})), this.currentUnitIndex);
 		}
 	}
@@ -803,6 +822,10 @@ hasTurnStarted: boolean;
 		this.units = this.units.filter(u => u !== unit);
 		this.initiativeQueue = this.initiativeQueue.filter(u => u !== unit); // Remove from initiative queue
 		console.log(`${unit.name} has been removed from the units array and initiative queue.`);
+		unit.sprite.destroy(); // Remove defeated unit
+		this.clearHighlights();
+		this.clearAllInteractivity();
+		this.updateUI();
 	}
 
 	// Clear all interactivity from previous turn
@@ -904,6 +927,11 @@ hasTurnStarted: boolean;
             ).setDepth(2); // Place above the unit
             unit.healthBlocks.push(block);
         }
+
+        // Claim the tile as unwalkable
+        if (unit.position) {
+            unit.position.isWalkable = false;
+        }
     }
 
 	// TEMPORARY HEALTH EXECUTION
@@ -947,10 +975,18 @@ hasTurnStarted: boolean;
 
 		// Trigger trap effects if the tile is trapped
 		tile.triggerTrap(unit);
+		if (unit.hp <= 0) {
+			this.removeUnit(unit);
+			this.startNextTurn();
+			return;
+		}
+
 		// Handle terrain effects
         if (tile.terrain?.type === TerrainType.PIT) {
             console.log(`${unit.name} falls into a pit and is removed from the battlefield!`);
             this.removeUnit(unit); // Remove the unit from the game
+			this.startNextTurn();
+			return;
         }
 
 		// Update health blocks after unit moves
@@ -1152,7 +1188,9 @@ hasTurnStarted: boolean;
 
 	highlightCurrentUnit (){
 		const currentUnit = this.initiativeQueue[this.currentUnitIndex];
-		currentUnit.sprite.setTint(GVC.UNIT_COLOR_HIGHLIGHT_CURRENT); // Highlight active unit
+		if (currentUnit) {
+			currentUnit.sprite.setTint(GVC.UNIT_COLOR_HIGHLIGHT_CURRENT); // Highlight active unit
+		}
 	}	
 
 	getTileNeighbors(tile: Tile): Tile[] {
@@ -1240,34 +1278,35 @@ hasTurnStarted: boolean;
 	///////////////////////////////////////////////////////////////////////////////////////////////
 	///////////////////////////////////////////////////////////////////////////////////////////////
 		placeTerrain(scene: Phaser.Scene){
-		
 			// Spawn Wooden Barrels
 			const barrelPositions = [
 				[1, 6],
 				[3, 7],
 				[0, 0],
-				[3, 3]
+					[1, 3],
+					[3, 3]
 			];
 			
 			barrelPositions.forEach(position => {
 				const [x, y] = position;
 				const barrelTile = this.grid[x][y]; // Position on the grid
 				const barrel = new Terrain(this /*scene*/, 'Wooden Barrel' /*name*/ , TerrainType.BARREL /*type*/, 1 /*HP*/, barrelTile /*position*/, 'P_Barrel01_C' /*spriteKey*/,
-					true /*isDestructible*/);
+					true /*isDestructible*/, true /*isMovable*/);
 				this.terrains.push(barrel);
 			});
 			
 
 			const barrelEXPositions = [
-				[1, 3],
+				//[1, 3],
 				[2, 1],
+				//[3, 3]
 			];
 
 			barrelEXPositions.forEach(position => {
 				const [x, y] = position;
 				const barrelTile = this.grid[x][y]; // Position on the grid
 				const barrel = new Terrain(this /*scene*/, 'Explosive Barrel' /*name*/ , TerrainType.BARREL_EX /*type*/, 1 /*HP*/, barrelTile /*position*/, 'P_BarrelEX01_C' /*spriteKey*/,
-					true /*isDestructible*/);
+					true /*isDestructible*/, true /*isMovable*/);
 				this.terrains.push(barrel);
 			});
 
@@ -1280,10 +1319,45 @@ hasTurnStarted: boolean;
 				const [x, y] = position;
 				const lavaTile = this.grid[x][y]; // Position on the grid
 				const lava = new Terrain(this /*scene*/, 'Lava' /*name*/ , TerrainType.LAVA /*type*/, 0 /*HP*/, lavaTile /*position*/, 'R_Lava_M' /*spriteKey*/,
-					false /*isDestructible*/);
+					false /*isDestructible*/, false /*isMovable*/);
 				this.terrains.push(lava);
 			});
 		}
+
+	scheduleLavaDestruction(target: Terrain) {
+		this.time.delayedCall(Phaser.Math.Between(1000, 2000), () => {
+			if (target.position.terrain === target && target.type === TerrainType.BARREL_EX) {
+				console.log(`${target.name} explodes in lava!`);
+				target.takeDamage(this, target.hp); // Destroy the terrain
+			}
+		});
 	}
+
+	handleCollision(target1: Unit | Terrain, target2: Unit | Terrain, attacker: Unit) {
+    if (target1 instanceof Unit && target2 instanceof Unit) {
+        console.log(`${target1.name} and ${target2.name} collide and both take 1 damage!`);
+        target1.takeDamage(this, 1, attacker, AttackType.MELEE, AttackElement.NEUTRAL, false);
+        target2.takeDamage(this, 1, attacker, AttackType.MELEE, AttackElement.NEUTRAL, false);
+        this.updateHealthBlocks(target1);
+        this.updateHealthBlocks(target2);
+    } else if (target1 instanceof Unit && target2 instanceof Terrain) {
+        console.log(`${target1.name} collides with ${target2.name} and both take 1 damage!`);
+        target1.takeDamage(this, 1, attacker, AttackType.MELEE, AttackElement.NEUTRAL, false);
+        target2.takeDamage(this, 1);
+        this.updateHealthBlocks(target1);
+    } else if (target1 instanceof Terrain && target2 instanceof Unit) {
+        console.log(`${target2.name} collides with ${target1.name} and both take 1 damage!`);
+        target2.takeDamage(this, 1, attacker, AttackType.MELEE, AttackElement.NEUTRAL, false);
+        target1.takeDamage(this, 1);
+        this.updateHealthBlocks(target2);
+    } else if (target1 instanceof Terrain && target2 instanceof Terrain) {
+        console.log(`${target1.name} and ${target2.name} collide and both take 1 damage!`);
+        target1.takeDamage(this, 1);
+        target2.takeDamage(this, 1);
+    } else {
+        console.error('Invalid collision detected!');
+    }
+}
+}
 
 

@@ -8,7 +8,7 @@
 		import { TerrainType } from './Terrain';
 // Import the Phaser Scene for use in the Tile Class.
 		import CombatScene from '../../scenes/CombatScene';
-///////////////////////////////////////////////////////////////////////////////////////////////
+	///////////////////////////////////////////////////////////////////////////////////////////////
 	///////////////////////////////////////////////////////////////////////////////////////////////
 		 // Combat Grid Tile configuration.
 		 // Defines what a default interactive tile is, including being walkable by default.
@@ -21,7 +21,9 @@
 	   faction: number;
 	   gridX: number;
 	   gridY: number;
-	   terrain: Terrain | null = null; // Add this line to define the terrain property
+	   terrain: Terrain | null = null; // Add this line to define the terrain property and check for collision
+	   unit: Unit | null = null; // Add this line to define the unit property and check for collision
+	   isHazard: boolean = false; // Add this line to define the hazard property
 	   // Trap properties
 	   isTrapped: boolean = false;
 	   		 trapSprite: Phaser.GameObjects.Sprite | null = null; // Sprite for the trap visual
@@ -40,6 +42,7 @@
 		   this.isWalkable = true; // Default to walkable
 		   this.faction = -1; // Default to no faction
 		   this.terrain = null; // Initialize terrain as null
+		   this.isHazard = false; // Initialize hazard as false
 
 		// Initialize hovering UI elements
 		this.hoverSprite = this.scene.add.sprite(this.x + this.width / 2, this.y + this.height / 2, 'UI_Mark_W');
