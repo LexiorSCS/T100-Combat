@@ -62,6 +62,7 @@ export class Unit {
      /////////////// Advancement Logic (Character tiers & additional skills)
      tier: UnitTier;
      isUpgraded: boolean; // Checks if a character is of A+ tier, therefore has better version of its abilities
+     targetingHoverSprite: Phaser.GameObjects.Sprite;
 
 
     constructor(scene: CombatScene, tier: UnitTier, name: string, type: string, role: 'Melee' | 'Ranged' = 'Melee' /*Default to Melee*/,
@@ -91,7 +92,7 @@ export class Unit {
         // Create the sprite for the unit
         this.sprite = scene.add.image(
             position.x + position.width / 2, // Center horizontally
-            position.y + position.height / 2, // Center vertically
+            position.y + position.height / 2, // Center vertically,
             spriteKey
         );
         // Set splash art to the token spriteKey if no splash art exists.
@@ -124,6 +125,38 @@ export class Unit {
         } else {
             console.warn(`Unable to scale sprite: ${spriteKey}. Frame not found.`);
         }
+
+        // Create targeting hover sprite (initially invisible) - scaled to 75% of cell size
+        this.targetingHoverSprite = scene.add.sprite(
+            this.sprite.x,
+            this.sprite.y,
+            'UI_Target_R'
+        ).setVisible(false)
+         .setDepth(5)
+         .setDisplaySize(GVC.CELL_SIZE * 1.15, GVC.CELL_SIZE * 1.15);
+
+        // Set up hover events for targeting
+        this.sprite.setInteractive();
+        this.sprite.on('pointerover', () => this.onTargetHover());
+        this.sprite.on('pointerout', () => this.onTargetHoverOut());
+    }
+
+    onTargetHover() {
+        // Check if the sprite has a red or green tint
+        const hasRedTint = (this.sprite.tintTopLeft & 0xff0000) === 0xff0000;
+        const hasGreenTint = (this.sprite.tintTopLeft & 0x00ff00) === 0x00ff00;
+
+        if (hasRedTint) {
+            this.targetingHoverSprite.setTexture('UI_Target_R');
+            this.targetingHoverSprite.setVisible(true);
+        } else if (hasGreenTint) {
+            this.targetingHoverSprite.setTexture('UI_Target_G');
+            this.targetingHoverSprite.setVisible(true);
+        }
+    }
+
+    onTargetHoverOut() {
+        this.targetingHoverSprite.setVisible(false);
     }
     
     ///////////////////////////////////////////////////////////////////////////////////
@@ -149,9 +182,15 @@ export class Unit {
         this.position.isWalkable = true; // Free the current tile
         this.position = tile;
         tile.isWalkable = false; // Occupy the new tile
+        tile.unit = this; // Assign the unit to the tile
 
         // Update sprite position
         this.sprite.setPosition(
+            tile.x + tile.width / 2,
+            tile.y + tile.height / 2
+        );
+
+        this.targetingHoverSprite.setPosition(
             tile.x + tile.width / 2,
             tile.y + tile.height / 2
         );
@@ -223,9 +262,21 @@ export class Unit {
                 }
                 newTile.triggerTrap(target); // Trigger trap if present
                 pushed = true;
-                this.isActionComplete = true; // Mark the action as complete
+                this.isActionComplete = true;
                 actualPushDistance = i;
-            } else if (newTile && !newTile.isWalkable && newTile.unit) {
+            } // Check if the new position would be outside the grid 
+            else if (newGridX < 0 || newGridX >= scene.grid[0].length || 
+                newGridY < 0 || newGridY >= scene.grid.length) {
+                console.log(`${target.name} is pushed out of bounds and takes collision damage!`);
+                if (target instanceof Unit) {
+                    target.takeDamage(scene, 1, attacker, AttackType.MELEE, AttackElement.NEUTRAL, false);
+                    scene.updateHealthBlocks(target);
+                } else if (target instanceof Terrain) {
+                    target.takeDamage(scene, 1);
+                }
+                break;
+            } 
+            else if (newTile && newTile.unit) {
                 const tUnit = newTile.unit; // Correctly reference the unit on the tile
                 console.log(`${attacker.name} pushes ${target.name} into ${tUnit.name}`);
                 scene.handleCollision(target, tUnit, attacker); // Pass the attacker to handleCollision
@@ -358,8 +409,8 @@ export class Unit {
             for (let i = 1; i <= pullDistance; i++) {
                 newGridX += stepX;
                 newGridY += stepY;
-    
                 const newTile = scene.grid[newGridY]?.[newGridX];
+    
                 if (newTile && newTile.isWalkable) {
                     if (target instanceof Unit) {
                         target.moveTo(newTile);
@@ -379,34 +430,29 @@ export class Unit {
                     pulled = true;
                     this.isActionComplete = true; // Mark the action as complete
                     actualPullDistance = i;
-                } else if (newTile && !newTile.isWalkable && newTile.unit) {
-                    const tUnit = newTile.unit; // Correctly reference the unit on the tile
-                    console.log(`${this.name} pulls ${target.name} into ${tUnit.name}`);
-                    scene.handleCollision(target, tUnit, this); // Pass the attacker to handleCollision
-                    if (tUnit.hp <= 0 && target.hp > 0) {
+                } 
+                // When target is pulled into an occupied tile (collision)
+                else if (newTile && !newTile.isWalkable && newTile.unit) {
+                    const collidingUnit = newTile.unit || newTile.terrain;
+                    // Don't damage the Expert (puller) when something collides with them
+                    if (collidingUnit !== this) {
+                        console.log(`${target.name} collides with ${collidingUnit.name}`);
+                        // Apply collision damage to the target
                         if (target instanceof Unit) {
-                            target.moveTo(newTile);
-                            console.log(`${target.name} moves along due to barging through defeated ${tUnit.name}!`);
-                            scene.updateHealthBlocks(target);
-                        } else if (target instanceof Terrain && target.isDestructible && target.movable) {
-                            target.position.isWalkable = true; // Free the current tile
-                            target.position.terrain = null; // Remove terrain from tile
-                            target.position = newTile;
-                            target.position.terrain = target; // Assign terrain to new tile
-                            newTile.isWalkable = false; // Occupy the new tile
-                            target.sprite.setPosition(
-                                newTile.x + newTile.width / 2,
-                                newTile.y + newTile.height / 2
-                            );
+                            target.takeDamage(scene, 1, this, AttackType.MELEE, AttackElement.NEUTRAL, false);
+                        } else if (target instanceof Terrain) {
+                            target.takeDamage(scene, 1);
                         }
-                        newTile.triggerTrap(target); // Trigger trap if present
-                        pulled = true;
-                        this.isActionComplete = true; // Mark the action as complete
-                        actualPullDistance = i;
-                    } else {
-                        break; // Stop if the unit is not destroyed
+                        // Apply collision damage to the unit being collided with
+                        if (collidingUnit instanceof Unit) {
+                            collidingUnit.takeDamage(scene, 1, this, AttackType.MELEE, AttackElement.NEUTRAL, false);
+                            scene.updateHealthBlocks(collidingUnit);
+                        }
+                        break; // Stop pulling after collision
                     }
-                } else if (newTile && !newTile.isWalkable && newTile.terrain && newTile.terrain.isDestructible) {
+                } 
+                // Handle collision with destructible terrain
+                else if (newTile && !newTile.isWalkable && newTile.terrain && newTile.terrain.isDestructible) {
                     const terrain = newTile.terrain;
                     console.log(`${this.name} pulls ${target.name} into destructible terrain ${terrain.name}`);
                     scene.handleCollision(target, terrain, this); // Pass the attacker to handleCollision
@@ -433,15 +479,19 @@ export class Unit {
                     } else {
                         break; // Stop if the terrain is not destroyed
                     }
-                } else if (newTile && newTile === this.position) {
+                } 
+                // Handle collision with the puller
+                else if (newTile && newTile === this.position) {
                     console.log(`${target.name} is pulled into ${this.name}'s space!`);
                     if (target instanceof Unit && target.faction !== this.faction) {
                         console.log(`Hostile ${target.name} pulled into ${this.name}'s space!`);
-
+                        target.takeDamage(scene, 1, this, AttackType.MELEE, AttackElement.NEUTRAL, false);
                         scene.updateHealthBlocks(target);
                     }
                     break; // Stop pulling if the target collides with the puller
-                } else {
+                } 
+                // Handle other hazards
+                else {
                     if (newTile?.terrain?.type === TerrainType.PIT) {
                         console.log(`${target.name} falls into a pit and is removed!`);
                         if (target instanceof Unit) {
@@ -484,9 +534,7 @@ export class Unit {
             if (actualPullDistance < pullDistance && target instanceof Unit && this.faction !== target.faction) {
                 console.log(`${target.name} suffers 1 damage due to being stopped by an unwalkable tile.`);
                 target.takeDamage(this.scene, 1, this, AttackType.MELEE, this.element, false);
-                if (target instanceof Unit) {
-                    this.scene.updateHealthBlocks(target);
-                }
+                this.scene.updateHealthBlocks(target);
                 this.isActionComplete = true;
             } else {
                 console.log(`${target.name} is out of range.`);
@@ -562,9 +610,9 @@ export class Unit {
             // Remove the health blocks
             this.healthBlocks.forEach(block => block.destroy());
             this.tempHealthBlocks.forEach(block => block.destroy());
-            
-            if (!this.position.isHazard) {
-                this.position.isWalkable = true; // Free the tile if it's not a hazard
+            // Free the tile if it's not a hazard
+            if (this.position.isHazard === false || null) {
+                this.position.isWalkable = true;
             }
 
             // Remove the defeated unit from the initiative tracker
@@ -574,6 +622,7 @@ export class Unit {
                 console.log(`Ending turn for ${this.name} as it is defeated.`);
                 scene.startNextTurn();
             }*/
+            this.targetingHoverSprite.destroy(); // Only destroy the hover sprite when unit dies
             this.sprite.destroy(); // Remove defeated unit
         }
     }

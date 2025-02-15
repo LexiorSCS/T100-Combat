@@ -31,6 +31,7 @@ export class Terrain {
     isDestructible: boolean; // Marks if this terrain can be targeted
     scene: CombatScene; // Reference to the CombatScene
     movable: boolean; // Marks if this terrain can be moved
+    targetingHoverSprite: Phaser.GameObjects.Sprite;
 
     constructor(scene: Phaser.Scene, name: string, type: TerrainType, hp: number, position: Tile, spriteKey: string, isDestructible: boolean, movable: boolean) {
         this.scene = scene as CombatScene;
@@ -87,6 +88,20 @@ export class Terrain {
         }        
         // Apply tint based on terrain type
             this.applyTint();
+
+        // Create targeting hover sprite (initially invisible) - scaled to 75% of cell size
+        this.targetingHoverSprite = scene.add.sprite(
+            this.sprite.x,
+            this.sprite.y,
+            'UI_Target_R'
+        ).setVisible(false)
+         .setDepth(3)
+         .setDisplaySize(GVC.CELL_SIZE * 1.25, GVC.CELL_SIZE * 1.25);
+
+        // Set up hover events for targeting
+        this.sprite.setInteractive();
+        this.sprite.on('pointerover', () => this.onTargetHover());
+        this.sprite.on('pointerout', () => this.onTargetHoverOut());
 }
 
     
@@ -112,6 +127,24 @@ export class Terrain {
     }
     
 
+    onTargetHover() {
+        // Check if the sprite has a red or green tint
+        const hasRedTint = (this.sprite.tintTopLeft & 0xff0000) === 0xff0000;
+        const hasGreenTint = (this.sprite.tintTopLeft & 0x00ff00) === 0x00ff00;
+
+        if (hasRedTint) {
+            this.targetingHoverSprite.setTexture('UI_Target_R');
+            this.targetingHoverSprite.setVisible(true);
+        } else if (hasGreenTint) {
+            this.targetingHoverSprite.setTexture('UI_Target_G');
+            this.targetingHoverSprite.setVisible(true);
+        }
+    }
+
+    onTargetHoverOut() {
+        this.targetingHoverSprite.setVisible(false);
+    }
+
     takeDamage(scene: Phaser.Scene, damage: number) {
         this.hp = Math.max(0, this.hp - damage);
         console.log(`${this.name} terrain takes ${damage} damage! Remaining HP: ${this.hp}`);
@@ -133,6 +166,7 @@ export class Terrain {
                 });
             }
             console.log(`${this.name} is destroyed!`);
+            this.targetingHoverSprite.destroy(); // Only destroy the hover sprite when terrain is destroyed
             this.sprite.destroy();
             this.position.isWalkable = true; // Free up the tile
             this.position.terrain = null; // Remove terrain from the tile
@@ -142,7 +176,6 @@ export class Terrain {
             combatScene.terrains = combatScene.terrains.filter(t => t !== this);
         }
     }
-
     
 }
 

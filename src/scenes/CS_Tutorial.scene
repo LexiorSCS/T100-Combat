@@ -1,30 +1,20 @@
 {
-    "id": "f64e6b5d-b3ee-427b-9c1b-aaed7dabde10",
+    "id": "5fa28f07-8b66-43b2-b2ea-be61e9db43aa",
     "sceneType": "SCENE",
     "settings": {
-        "snapWidth": 128,
-        "snapHeight": 128,
+        "snapEnabled": true,
+        "snapWidth": 116,
+        "snapHeight": 116,
         "exportClass": true,
         "autoImport": true,
         "preloadPackFiles": [],
         "createMethodName": "editorCreate",
-        "sceneKey": "CombatScene",
+        "sceneKey": "CS_Tutorial",
         "compilerOutputLanguage": "TYPE_SCRIPT",
         "borderWidth": 1280,
         "borderHeight": 760
     },
-    "displayList": [
-        {
-            "type": "Image",
-            "id": "00f1404a-e77d-4d93-84ee-84d342b76dc1",
-            "label": "battlemapHORIZ",
-            "texture": {
-                "key": "BattlemapHORIZ"
-            },
-            "x": 434,
-            "y": 380
-        }
-    ],
+    "displayList": [],
     "plainObjects": [],
     "meta": {
         "app": "Phaser Editor - Scene Editor",

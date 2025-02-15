@@ -1,8 +1,3 @@
-/* START OF COMPILED CODE */
-
-/* START-USER-IMPORTS */
-/* END-USER-IMPORTS */
-
 import Phaser from 'phaser';
 import * as GVC from '../GlobalVariablesCombat';
 // Import the Unit template.
@@ -10,6 +5,13 @@ import { Unit } from '../scripts/tactical/Unit';
 import { UnitTier } from '../scripts/tactical/Unit'; 
 import { AttackElement } from '../scripts/tactical/Unit';
 import { AttackType } from '../scripts/tactical/Unit'; 
+
+/* START OF COMPILED CODE */
+
+/* START-USER-IMPORTS */
+/* END-USER-IMPORTS */
+
+
 
 export class PopupWindow {
     private scene: Phaser.Scene;
