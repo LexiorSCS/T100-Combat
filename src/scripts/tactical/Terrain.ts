@@ -129,8 +129,8 @@ export class Terrain {
 
     onTargetHover() {
         // Check if the sprite has a red or green tint
-        const hasRedTint = (this.sprite.tintTopLeft & 0xff0000) === 0xff0000;
-        const hasGreenTint = (this.sprite.tintTopLeft & 0x00ff00) === 0x00ff00;
+        let hasRedTint = (this.sprite.tintTopLeft & 0xff0000) === 0xff0000;
+        let hasGreenTint = (this.sprite.tintTopLeft & 0x00ff00) === 0x00ff00;
 
         if (hasRedTint) {
             this.targetingHoverSprite.setTexture('UI_Target_R');

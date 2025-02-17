@@ -605,26 +605,55 @@ export class Unit {
         this.scene.updateHealthBlocks(this);
     
         // Check for unit defeat
-        if (this.hp <= 0) {
+        /*if (this.hp <= 0) {
             console.log(`${this.name} is defeated!`);
             // Remove the health blocks
             this.healthBlocks.forEach(block => block.destroy());
             this.tempHealthBlocks.forEach(block => block.destroy());
-            // Free the tile if it's not a hazard
-            if (this.position.isHazard === false || null) {
-                this.position.isWalkable = true;
-            }
-
+            // Clear the unit reference from the tile
             // Remove the defeated unit from the initiative tracker
-            this.scene.removeUnit(this); // Remove the unit from the scene
-            // End the turn if the unit dies during its turn
-            /*if (scene.initiativeQueue[scene.currentUnitIndex] === this) {
-                console.log(`Ending turn for ${this.name} as it is defeated.`);
-                scene.startNextTurn();
-            }*/
-            this.targetingHoverSprite.destroy(); // Only destroy the hover sprite when unit dies
-            this.sprite.destroy(); // Remove defeated unit
-        }
+            this.scene.removeUnit(this);
+            this.targetingHoverSprite.destroy();
+            this.sprite.destroy();
+        }*/
+       // Inside takeDamage method, in the if (this.hp <= 0) block:
+// In the takeDamage method, just before removeUnit is called:
+if (this.hp <= 0) {
+    console.log(`${this.name} is defeated!`);
+    // Remove the health blocks
+    this.healthBlocks.forEach(block => block.destroy());
+    this.tempHealthBlocks.forEach(block => block.destroy());
+    
+    // Clear the tile state before removing the unit
+    if (this.position) {
+        // Log tile state BEFORE changes
+        console.log('Tile state BEFORE cleanup:', {
+            isWalkable: this.position.isWalkable,
+            unit: this.position.unit,
+            terrain: this.position.terrain,
+            isHazard: this.position.isHazard,
+            coordinates: `(${this.position.gridX}, ${this.position.gridY})`
+        });
+        
+        // Reset walkability and clear unit reference
+        this.position.isWalkable = true;
+        this.position.unit = null;
+        
+        // Log tile state AFTER changes
+        console.log('Tile state AFTER cleanup:', {
+            isWalkable: this.position.isWalkable,
+            unit: this.position.unit,
+            terrain: this.position.terrain,
+            isHazard: this.position.isHazard,
+            coordinates: `(${this.position.gridX}, ${this.position.gridY})`
+        });
+    }
+    
+    // Remove the defeated unit from the initiative tracker
+    this.scene.removeUnit(this);
+    this.targetingHoverSprite.destroy();
+    this.sprite.destroy();
+}
     }
     // Grant Temporary Health to a Unit (without time retention limimation)
     grantTemporaryHealth(amount: number) {

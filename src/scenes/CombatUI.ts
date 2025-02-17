@@ -138,11 +138,46 @@ export class InitiativeLadder {
     private scene: Phaser.Scene;
     private entryContainer: Phaser.GameObjects.Container;
     private unitEntries: Phaser.GameObjects.Container[] = [];
+    private gradientBackground: Phaser.GameObjects.Image; // Change this line
 
     constructor(scene: Phaser.Scene) {
         this.scene = scene;
+        // Initialize the gradient background
+        this.createGradientBackground(); // Change this line
+
         // Initialize the entry container
         this.entryContainer = this.scene.add.container(0, 24).setDepth(5);
+    }
+
+    createGradientBackground() {
+        const gradientHeight = GVC.CELL_SIZE * 0.5; // Adjust the height as needed
+        const gradientWidth = GVC.CELL_SIZE * 8; // Adjust the width as needed
+        const gradientX = GVC.CELL_SIZE * 1.5; // Center horizontally
+        const gradientY = 0; // Align with the entry container's Y position
+
+        const gradient = this.scene.textures.createCanvas('gradient', gradientWidth, gradientHeight);
+        if (!gradient) {
+            console.error('Failed to create gradient texture.');
+            return;
+        }
+        const ctx = gradient.getContext();
+        if (!ctx) {
+            console.error('Failed to get context for gradient texture.');
+            return;
+        }
+
+        const grd = ctx.createLinearGradient(0, 0, 0, gradientHeight);
+        grd.addColorStop(0, 'rgba(0, 0, 0, 0.5)');
+        grd.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
+        ctx.fillStyle = grd;
+        ctx.fillRect(0, 0, gradientWidth, gradientHeight);
+
+        gradient.refresh();
+
+        this.scene.textures.addCanvas('gradient', gradient.canvas);
+
+        this.gradientBackground = this.scene.add.image(gradientX, gradientY, 'gradient').setOrigin(0, 0).setDepth(4); // Change this line
     }
 
     updateInitiativeLadder(queue: { name: string, initiative: number, portraitKey: string, faction: number, element: AttackElement }[], activeUnitIndex: number) {
@@ -315,6 +350,7 @@ export default class CombatUI extends Phaser.Scene {
     private initiativeLadder: InitiativeLadder;
     private windowStack: (() => void)[] = [];
     private roundCounterText: Phaser.GameObjects.Text; // Add a property for the round counter
+    private isPopupActive: boolean = false; // Add this line
 
     constructor() {
         super("CombatUI");
@@ -386,16 +422,32 @@ export default class CombatUI extends Phaser.Scene {
 
     // Method to create a Popup Window
     createPopupWindow(title: string, options: string[], onOptionSelected: (option: string) => void, onCancel: () => void) {
-        this.scene.bringToTop(); // Bring the CombatUI scene to the top
+        if (this.isPopupActive) {
+            console.log('A popup window is already active');
+            return null;
+        }
+
+        this.isPopupActive = true;
+        this.scene.bringToTop();
         const recreateWindow = () => this.createPopupWindow(title, options, onOptionSelected, onCancel);
         this.windowStack.push(recreateWindow);
-        return new PopupWindow(this, title, options, onOptionSelected, () => {
-            onCancel();
-            this.windowStack.pop();
-            if (this.windowStack.length > 0) {
-                this.windowStack[this.windowStack.length - 1]();
+
+        const popup = new PopupWindow(this, title, options, 
+            (option) => {
+                this.isPopupActive = false;
+                onOptionSelected(option);
+            }, 
+            () => {
+                this.isPopupActive = false;
+                onCancel();
+                this.windowStack.pop();
+                if (this.windowStack.length > 0) {
+                    this.windowStack[this.windowStack.length - 1]();
+                }
             }
-        });
+        );
+
+        return popup;
     }
 
     // Method to create a Popup Targeting
@@ -412,6 +464,7 @@ export default class CombatUI extends Phaser.Scene {
 
 	// Method to clear the popup window stack
 	clearPopupWindowStack() {
+        this.isPopupActive = false;
 		while (this.windowStack.length > 0) {
 			this.windowStack.pop();
 		}

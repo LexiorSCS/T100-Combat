@@ -14,10 +14,34 @@ import { TerrainType } from '../scripts//tactical/Terrain'
 // import CombatUI from './CombatUI';
 import { InitiativeLadder, PopupTargeting, PopupWindow } from './CombatUI';
 import CombatUI from './CombatUI';
+import CS_Tutorial from './CS_Tutorial';
 
 /* START OF COMPILED CODE */
 
+/* START-USER-IMPORTS */
+/* END-USER-IMPORTS */
+
 export default class CombatScene extends Phaser.Scene {
+
+	constructor() {
+		super("CombatScene");
+
+		/* START-USER-CTR-CODE */
+        // Write your code here.
+        /* END-USER-CTR-CODE */
+	}
+
+	editorCreate(): void {
+
+		// battlemapHORIZ
+		const battlemapHORIZ = this.add.image(0, 0, "BattlemapHORIZ");
+		battlemapHORIZ.setOrigin(0, 0);
+		battlemapHORIZ.visible = false;
+
+		this.events.emit("scene-awake");
+	}
+
+	/* START-USER-CODE */
     // Move all your property declarations here
     grid: Tile[][] = [];
     units: Unit[] = []; // Array to hold units on the scene.
@@ -35,27 +59,13 @@ export default class CombatScene extends Phaser.Scene {
     currentUnitIndex: number = 0; // Tracks whose turn it is
     hasTurnStarted: boolean;
     round: number = 1; // Track the current round
-
-    constructor() {
-        super("CombatScene");
-        /* START-USER-CTR-CODE */
-        // Write your code here.
-        /* END-USER-CTR-CODE */
-    }
-
-    editorCreate(): void {
-        // battlemapHORIZ
-        this.add.image(640, 380, "BattlemapHORIZ").setDepth(1); // Sets the Layer to 1 (Foreground)
-        this.events.emit("scene-awake");
-    }
-
-    /* START-USER-CODE */
     // Move all your methods and implementation code here
     preload() {
         // Load Unit token assets
         this.load.pack("assets-tokens-pack", "assets/assets-tokens-pack.json");
         this.load.pack("asset-UI-pack", "assets/asset-UI-pack.json");
         this.load.pack("asset-SplashPortraits-pack", "assets/asset-SplashPortraits-pack.json");
+        this.load.pack("asset-tileset-pack","assets/asset-tileset-pack.json");
         // Ensure portrait textures are loaded
     }
 
@@ -64,6 +74,9 @@ export default class CombatScene extends Phaser.Scene {
         this.scene.launch('CombatUI');
         // Set CombatUI scene to be on top of CombatScene
         this.scene.bringToTop('CombatUI');
+        const mapLayout = this.scene.get('CS_Tutorial') as CS_Tutorial; // Terrain Layout Scene
+        this.scene.launch(mapLayout);
+        this.scene.sendToBack(mapLayout);
 
         // Ensure CombatUI is fully created before proceeding
         this.scene.get('CombatUI').events.once('create', () => {
@@ -79,8 +92,10 @@ export default class CombatScene extends Phaser.Scene {
             const gridWidthPx = GVC.GRID_WIDTH * GVC.CELL_SIZE; // Total grid width in pixels
             const gridHeightPx = GVC.GRID_HEIGHT * GVC.CELL_SIZE; // Total grid height in pixels
 
-            const offsetX = (screenWidth - gridWidthPx) / 2; // Offset to center the grid horizontally
-            const offsetY = (screenHeight - gridHeightPx) / 2;
+            // const offsetX = (screenWidth - gridWidthPx) / 2; // Offset to center the grid horizontally
+            // const offsetY = (screenHeight - gridHeightPx) / 2;
+            const offsetX = 1.5 * GVC.CELL_SIZE;
+            const offsetY = 64;
 
             // Generate the Tiled Battlefield
             for (let y = 0; y < GVC.GRID_HEIGHT; y++) {
@@ -189,8 +204,10 @@ export default class CombatScene extends Phaser.Scene {
         const gridWidthPx = GVC.GRID_WIDTH * GVC.CELL_SIZE; // Total grid width in pixels
         const gridHeightPx = GVC.GRID_HEIGHT * GVC.CELL_SIZE; // Total grid height in pixels
 
-        const offsetX = (screenWidth - gridWidthPx) / 2; // Offset to center the grid horizontally
-        const offsetY = (screenHeight - gridHeightPx) / 2;
+        //const offsetX = (screenWidth - gridWidthPx) / 2; // Offset to center the grid horizontally
+        //const offsetY = (screenHeight - gridHeightPx) / 2;
+        const offsetX = 1.5 * GVC.CELL_SIZE;
+        const offsetY = 64;
 
         // Draw horizontal lines
         for (let y = 0; y <= GVC.GRID_HEIGHT; y++) {
@@ -506,68 +523,70 @@ export default class CombatScene extends Phaser.Scene {
                     if (this.isTargetingMode === false && !this.popupTargetingInstance) {
                         const combatUI = this.scene.get('CombatUI') as CombatUI;
                         if (combatUI) {
-                            console.log('Creating PopupWindow'); // Add this line
-                            combatUI.createPopupWindow('Choose one:', ['Disarm Trap', 'Set Trap'], (option) => {
-                                this.enterModeTargeting(option);
-                                this.popupTargetingInstance = combatUI.createPopupTargeting(this.currentSkill, null, () => {
-                                    // On Cancel
-                                    this.leaveModeTargeting(); // Delete all of highlights & exit targeting mode; Re-highlight Current unit
-                                }, () => {});
-                                if (option === 'Set Trap') {
-                                    console.log('Set Trap selected.');
-                                    if (unit.remainingTraps > 0) {
-                                        console.log('User has traps remaining.');
-                                        const adjacentDefender = this.units.find(
-                                            defender => defender.type === 'Defender' && this.isAdjacent(unit.position, defender.position) && unit.faction === defender.faction
-                                        );
-                                        const validTiles = this.getTilesInRange(unit.position.gridX, unit.position.gridY, 1).filter(
-                                            tile => tile.isWalkable && !tile.isTrapped
-                                        );
-                                        if (adjacentDefender) {
-                                            const defenderAdjacentTiles = this.getTilesInRange(adjacentDefender.position.gridX, adjacentDefender.position.gridY, 1).filter(
+                            const popup = combatUI.createPopupWindow('Choose one:', ['Disarm Trap', 'Set Trap'], (option) => {
+                                // Only proceed if popup was created successfully
+                                if (popup) {
+                                    this.enterModeTargeting(option);
+                                    this.popupTargetingInstance = combatUI.createPopupTargeting(this.currentSkill, null, () => {
+                                        this.leaveModeTargeting();
+                                    }, () => {});
+
+                                    if (option === 'Set Trap') {
+                                        console.log('Set Trap selected.');
+                                        if (unit.remainingTraps > 0) {
+                                            console.log('User has traps remaining.');
+                                            const adjacentDefender = this.units.find(
+                                                defender => defender.type === 'Defender' && this.isAdjacent(unit.position, defender.position) && unit.faction === defender.faction
+                                            );
+                                            const validTiles = this.getTilesInRange(unit.position.gridX, unit.position.gridY, 1).filter(
                                                 tile => tile.isWalkable && !tile.isTrapped
                                             );
-                                            validTiles.push(...defenderAdjacentTiles);
+                                            if (adjacentDefender) {
+                                                const defenderAdjacentTiles = this.getTilesInRange(adjacentDefender.position.gridX, adjacentDefender.position.gridY, 1).filter(
+                                                    tile => tile.isWalkable && !tile.isTrapped
+                                                );
+                                                validTiles.push(...defenderAdjacentTiles);
+                                            }
+
+                                            validTiles.forEach(tile => {
+                                                tile.setFillStyle(GVC.TILE_COLOR_TRAP).setAlpha(GVC.TILE_ALPHA_HIGHLIGHT); // Highlight valid tiles
+                                                tile.setInteractive();
+                                                tile.once('pointerdown', () => {
+                                                    this.clearAllInteractivity(); // Clear all interactivity before executing action
+                                                    this.leaveModeTargeting();
+                                                    unit.setTrap(this /*scene*/, tile /*where*/, true /*isQuizActive*/, false /*isUpgradeActive*/, false /*isQuizCorrect*/);
+                                                    this.clearHighlights();
+                                                    if (unit.isActionComplete) {
+                                                        this.startNextTurn(); // End turn after placing trap
+                                                    }
+                                                });
+                                            });	
                                         }
+                                        else {
+                                            console.log('User has no traps remaining.');
+                                            this.isActionComplete = false; // Prevent ending turn if no traps are available
+                                        }
+                                    } else if (option === 'Disarm Trap') {
+                                        // Call the disarm trap method here
+                                        console.log('Disarm Trap selected');
+                                        const validTiles = this.getTilesInRange(unit.position.gridX, unit.position.gridY, 1).filter(
+                                            tile => tile.isWalkable && tile.isTrapped
+                                        );
 
                                         validTiles.forEach(tile => {
-                                            tile.setFillStyle(GVC.TILE_COLOR_TRAP); // Highlight valid tiles
+                                            tile.setFillStyle(GVC.TILE_COLOR_TRAP).setAlpha(GVC.TILE_ALPHA_HIGHLIGHT); // Highlight valid tiles
                                             tile.setInteractive();
                                             tile.once('pointerdown', () => {
                                                 this.clearAllInteractivity(); // Clear all interactivity before executing action
                                                 this.leaveModeTargeting();
-                                                unit.setTrap(this /*scene*/, tile /*where*/, true /*isQuizActive*/, false /*isUpgradeActive*/, false /*isQuizCorrect*/);
+                                                unit.disarmTrap(this /*scene*/, tile /*where*/);
                                                 this.clearHighlights();
                                                 if (unit.isActionComplete) {
-                                                    this.startNextTurn(); // End turn after placing trap
+                                                    this.startNextTurn(); // End turn after disarming trap
                                                 }
                                             });
-                                        });	
-                                    }
-                                    else {
-                                        console.log('User has no traps remaining.');
-                                        this.isActionComplete = false; // Prevent ending turn if no traps are available
-                                    }
-                                } else if (option === 'Disarm Trap') {
-                                    // Call the disarm trap method here
-                                    console.log('Disarm Trap selected');
-                                    const validTiles = this.getTilesInRange(unit.position.gridX, unit.position.gridY, 1).filter(
-                                        tile => tile.isWalkable && tile.isTrapped
-                                    );
-
-                                    validTiles.forEach(tile => {
-                                        tile.setFillStyle(GVC.TILE_COLOR_TRAP); // Highlight valid tiles
-                                        tile.setInteractive();
-                                        tile.once('pointerdown', () => {
-                                            this.clearAllInteractivity(); // Clear all interactivity before executing action
-                                            this.leaveModeTargeting();
-                                            unit.disarmTrap(this /*scene*/, tile /*where*/);
-                                            this.clearHighlights();
-                                            if (unit.isActionComplete) {
-                                                this.startNextTurn(); // End turn after disarming trap
-                                            }
                                         });
-                                    });
+                                    }
                                 }
                             }, () => {
                                 // onCancel
@@ -801,16 +820,58 @@ export default class CombatScene extends Phaser.Scene {
     }
 
     // Remove Units from the Initiative Tracker
-    removeUnit(unit: Unit) {
+    /*removeUnit(unit: Unit) {
+        // Make the tile walkable before removing the unit (unless it's a hazard)
+        if (unit.position && !unit.position.isHazard) {
+            unit.position.isWalkable = true;
+            unit.position.unit = null;  // Clear the unit reference
+        }
         this.units = this.units.filter(u => u !== unit);
-        this.initiativeQueue = this.initiativeQueue.filter(u => u !== unit); // Remove from initiative queue
+        this.initiativeQueue = this.initiativeQueue.filter(u => u !== unit);
         console.log(`${unit.name} has been removed from the units array and initiative queue.`);
-        unit.sprite.destroy(); // Remove defeated unit
-        unit.targetingHoverSprite.destroy(); // Clean up targeting hover sprite
+        unit.sprite.destroy();
+        unit.targetingHoverSprite.destroy();
         this.clearHighlights();
         this.clearAllInteractivity();
         this.updateUI();
-    }
+    }*/
+        removeUnit(unit: Unit) {
+            if (unit.position) {
+                const tile = unit.position;
+                console.log('DETAILED Tile state in removeUnit:', {
+                    gridPos: `(${tile.gridX}, ${tile.gridY})`,
+                    isWalkable: tile.isWalkable,
+                    hasUnit: tile.unit !== null,
+                    unitRef: tile.unit ? tile.unit.name : 'null',
+                    hasTerrain: tile.terrain !== null,
+                    terrainType: tile.terrain?.type ?? 'none',
+                    isHazard: tile.isHazard,
+                    parent: Object.getPrototypeOf(tile).constructor.name
+                });
+
+                // Reset tile state using the new method
+                tile.resetTileState();
+
+                console.log('DETAILED Tile state AFTER changes:', {
+                    gridPos: `(${tile.gridX}, ${tile.gridY})`,
+                    isWalkable: tile.isWalkable,
+                    hasUnit: tile.unit !== null,
+                    hasTerrain: tile.terrain !== null,
+                    terrainType: tile.terrain?.type ?? 'none',
+                    isHazard: tile.isHazard,
+                    parent: Object.getPrototypeOf(tile).constructor.name
+                });
+
+                // Complete the unit removal process
+                this.units = this.units.filter(u => u !== unit);
+                this.initiativeQueue = this.initiativeQueue.filter(u => u !== unit);
+                unit.sprite.destroy();
+                unit.targetingHoverSprite.destroy();
+                this.clearHighlights();
+                this.clearAllInteractivity();
+                this.updateUI();
+            }
+        }
 
     // Clear all interactivity from previous turn
     clearAllInteractivity() {
@@ -1050,7 +1111,7 @@ export default class CombatScene extends Phaser.Scene {
     clearHighlights() {
         this.grid.forEach(row => {
             row.forEach(tile => {
-                tile.setFillStyle(GVC.TILE_COLOR_DEFAULT); // Reset to default fill style
+                tile.setFillStyle(GVC.TILE_COLOR_DEFAULT).setAlpha(GVC.TILE_ALPHA_DEFAULT); // Reset to default fill style
                 if (tile.hoverSprite) {
                     tile.hoverSprite.setVisible(false); // Set hover sprite to invisible
                 }
@@ -1076,7 +1137,7 @@ export default class CombatScene extends Phaser.Scene {
 
             // Highlight the tile if it's walkable
             if (tile.isWalkable) {
-                tile.setFillStyle(tile.isTrapped ? GVC.TILE_COLOR_TRAP : GVC.TILE_COLOR_HIGHLIGHT_OK);
+                tile.setFillStyle(tile.isTrapped ? GVC.TILE_COLOR_TRAP : GVC.TILE_COLOR_HIGHLIGHT_OK).setAlpha(GVC.TILE_ALPHA_HIGHLIGHT);
                 tile.setInteractive();
                 tile.on('pointerdown', () => this.moveUnitToTile(unit, tile));
             }
@@ -1085,7 +1146,7 @@ export default class CombatScene extends Phaser.Scene {
             if (unit.type === 'Defender' && !tile.isWalkable && tile.terrain === null) {
                 const occupant = this.units.find(u => u.position === tile);
                 if (occupant) {
-                    tile.setFillStyle(0x800080); // Purple for Castling
+                    tile.setFillStyle(GVC.TILE_COLOR_HIGHLIGHT_CASTLING).setAlpha(GVC.TILE_ALPHA_HIGHLIGHT); // Purple for Castling
                     tile.setInteractive();
                     tile.on('pointerdown', () => this.castling(unit, occupant)); // Trigger Castling
                 }
@@ -1304,18 +1365,19 @@ export default class CombatScene extends Phaser.Scene {
             this.terrains.push(barrel);
         });
 
-        const lavaPositions = [
-            [2, 4],
-            [3, 4],
-        ];
+     //   const lavaPositions = [
+     //       [2, 4],
+     //      [3, 4],
+     //  ];
 
-        lavaPositions.forEach(position => {
-            const [x, y] = position;
-            const lavaTile = this.grid[x][y]; // Position on the grid
-            const lava = new Terrain(this /*scene*/, 'Lava' /*name*/ , TerrainType.LAVA /*type*/, 0 /*HP*/, lavaTile /*position*/, 'R_Lava_M' /*spriteKey*/,
-                false /*isDestructible*/, false /*isMovable*/);
-            this.terrains.push(lava);
-        });
+       // lavaPositions.forEach(position => {
+       //    const [x, y] = position;
+       //     const lavaTile = this.grid[x][y]; // Position on the grid
+       //     const lava = new Terrain(this /*scene*/, 'Lava' /*name*/ , TerrainType.LAVA /*type*/, 0 /*HP*/, lavaTile /*position*/, 'R_Lava_M' /*spriteKey*/,
+       //         false /*isDestructible*/, false /*isMovable*/);
+       //     this.terrains.push(lava);
+       // }); 
+        
     }
 
     scheduleLavaDestruction(target: Terrain) {

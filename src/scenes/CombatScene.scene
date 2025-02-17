@@ -2,8 +2,9 @@
     "id": "f64e6b5d-b3ee-427b-9c1b-aaed7dabde10",
     "sceneType": "SCENE",
     "settings": {
-        "snapWidth": 128,
-        "snapHeight": 128,
+        "snapEnabled": true,
+        "snapWidth": 116,
+        "snapHeight": 116,
         "exportClass": true,
         "autoImport": true,
         "preloadPackFiles": [],
@@ -21,8 +22,9 @@
             "texture": {
                 "key": "BattlemapHORIZ"
             },
-            "x": 434,
-            "y": 380
+            "originX": 0,
+            "originY": 0,
+            "visible": false
         }
     ],
     "plainObjects": [],

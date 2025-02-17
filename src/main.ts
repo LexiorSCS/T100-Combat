@@ -3,6 +3,7 @@ import Level from "./scenes/Level";
 import Preload from "./scenes/Preload";
 import CombatScene from "./scenes/CombatScene";
 import CombatUI from "./scenes/CombatUI";
+import CS_Tutorial from "./scenes/CS_Tutorial";
 
 class Boot extends Phaser.Scene {
 
@@ -33,7 +34,7 @@ window.addEventListener('load', function () {
 			autoCenter: Phaser.Scale.Center.CENTER_BOTH
 		},
 		pixelArt: true, // Enable pixel art rendering
-		scene: [Boot, Preload, CombatUI, CombatScene, ]
+		scene: [Boot, Preload, CS_Tutorial, CombatUI, CombatScene, ]
 	});
 
 	game.scene.start("Boot");

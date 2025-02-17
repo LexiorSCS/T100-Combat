@@ -57,6 +57,7 @@ export default class Preload extends Phaser.Scene {
 
 		this.load.pack("asset-pack", "assets/asset-pack.json");
 
+
 		const width = this.progressBar.width;
 
 		this.load.on("progress", (value: number) => {
@@ -81,7 +82,7 @@ export default class Preload extends Phaser.Scene {
 		}
 		
 		this.scene.start("CombatScene");
-		console.log(`The Hundred - Combat System devbuild 1.07 | Bugfix patch + targeting MARKERS addon`);
+		console.log(`The Hundred - Combat System devbuild 2.00 | Tileset & Core UI`);
 	}
 
 	/* END-USER-CODE */
