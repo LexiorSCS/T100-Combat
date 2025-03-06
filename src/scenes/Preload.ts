@@ -82,7 +82,7 @@ export default class Preload extends Phaser.Scene {
 		}
 		
 		this.scene.start("CombatScene");
-		console.log(`The Hundred - Combat System devbuild 2.03 | Tileset, DebugMode & Pathfinding`);
+		console.log(`The Hundred - Combat System devbuild 2.04 | Pathfinding UI`);
 	}
 
 	/* END-USER-CODE */

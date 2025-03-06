@@ -54,6 +54,10 @@ export default class CombatScene extends Phaser.Scene {
     debugModeEnabled: boolean = true; // Debug mode enabled by default
     debugElements: Phaser.GameObjects.GameObject[] = []; // Store all debug elements here
     debugToggleButton: Phaser.GameObjects.Text | null = null; // Button to toggle debug mode
+    // Path animation properties
+    private pathIndicators: Phaser.GameObjects.Graphics[] = [];
+    private pathAnimationActive: boolean = false;
+    private pathAnimationTween: Phaser.Tweens.Tween | null = null;
     // Targeting System
     isTargetingMode: boolean = false; // Whether we are currently in targeting mode
     logTargetingModeON: string = 'Targeting mode is already inbound !' // Text for debugging working Targeting Mode
@@ -65,6 +69,8 @@ export default class CombatScene extends Phaser.Scene {
     currentUnitIndex: number = 0; // Tracks whose turn it is
     hasTurnStarted: boolean;
     round: number = 1; // Track the current round
+    // Add a property to track valid movement tiles
+    private validMovementTiles: Set<Tile> = new Set();
     // Move all your methods and implementation code here
     preload() {
         // Load Unit token assets
@@ -353,7 +359,7 @@ export default class CombatScene extends Phaser.Scene {
                         );
 
                         [...validTargets, ...destructibleTerrain].forEach(target => {
-                            target.sprite.setTint(0xff0000); // Highlight valid targets in red
+                            target.sprite.setTint(GVC.UNIT_COLOR_HIGHLIGHT_TARGET); // Highlight valid targets in red
                             target.sprite.setInteractive();
                             target.sprite.once('pointerdown', () => {
                                 this.clearAllInteractivity(); // Clear all interactivity before executing action
@@ -388,7 +394,7 @@ export default class CombatScene extends Phaser.Scene {
                         }
                         // Highlight valid targets
                         validTargets.forEach(target => {
-                            target.sprite.setTint(0xff0000); // Highlight in red
+                            target.sprite.setTint(GVC.UNIT_COLOR_HIGHLIGHT_TARGET); // Highlight in red
                             target.sprite.setInteractive();
                             target.sprite.once('pointerdown', () => {
                                 this.clearAllInteractivity(); // Clear all interactivity before executing action
@@ -474,7 +480,7 @@ export default class CombatScene extends Phaser.Scene {
 
                         validTargets.forEach(target => {
                             target.sprite.setInteractive();
-                            target.sprite.setTint(0xff0000); // Highlight in red
+                            target.sprite.setTint(GVC.UNIT_COLOR_HIGHLIGHT_TARGET); // Highlight in red
                             target.sprite.once('pointerdown', () => {
                                 this.clearAllInteractivity(); // Clear all interactivity before executing action
                                 const isQuizActive = true; // Placeholder: Check if quiz is active
@@ -512,7 +518,7 @@ export default class CombatScene extends Phaser.Scene {
 
                     validTargets.forEach(target => {
                         target.sprite.setInteractive();
-                        target.sprite.setTint(0x00ff00); // Highlight in green
+                        target.sprite.setTint(GVC.UNIT_COLOR_HIGHLIGHT_TARGET); // Highlight in green
                         target.sprite.once('pointerdown', () => {
                             this.clearAllInteractivity(); // Clear all interactivity before executing action
                             this.leaveModeTargeting();
@@ -658,7 +664,7 @@ export default class CombatScene extends Phaser.Scene {
         );
 
         validTargets.forEach(target => {
-            target.sprite.setTint(0xff0000); // Highlight in red
+            target.sprite.setTint(GVC.UNIT_COLOR_HIGHLIGHT_TARGET); // Highlight in red
             target.sprite.setInteractive();
             target.sprite.once('pointerdown', () => {
                 this.clearAllInteractivity(); // Clear all interactivity before executing action
@@ -1011,6 +1017,10 @@ export default class CombatScene extends Phaser.Scene {
     moveUnitToTile(unit: Unit, tile: Tile) {
         console.log(`Attempting to move ${unit.name} from (${unit.position.gridX},${unit.position.gridY}) to (${tile.gridX},${tile.gridY})`);
     
+        // Clear any path indicators before starting movement
+        this.clearPathIndicators();
+        this.validMovementTiles.clear(); // Clear valid movement tiles
+        
         // Validate that the target tile is walkable
         if (!this.canMoveTo(tile.gridX, tile.gridY)) {
             console.warn(`Target tile (${tile.gridX},${tile.gridY}) is not walkable!`);
@@ -1027,18 +1037,16 @@ export default class CombatScene extends Phaser.Scene {
         }
         
         let totalCost = 0;
-
         // Calculate total cost first
         for (let i = 1; i < path.length; i++) {
             const current = path[i - 1];
             const next = path[i];
-
             const dx = Math.abs(next.gridX - current.gridX);
             const dy = Math.abs(next.gridY - current.gridY);
             const isDiagonal = dx === 1 && dy === 1;
-
             let cost = isDiagonal ? 2 : 1;
             if (unit.type === 'Expert' && isDiagonal) cost = 1;
+            if (next.terrain?.type === TerrainType.MUD) cost *= 2; // Consider terrain in cost calculation
 
             totalCost += cost;
         }
@@ -1051,18 +1059,15 @@ export default class CombatScene extends Phaser.Scene {
         // Spend movement points before starting movement
         unit.spendMovementPoints(totalCost);
 
+        // Clear any path indicators
+        this.clearPathIndicators();
+
         // Move along the path with sequential animations
         let currentIndex = 0;
         const moveNext = () => {
             if (currentIndex >= path.length - 1) {
                 // Movement complete
-                // Trigger trap effects if the tile is trapped
-                tile.triggerTrap(unit);
-                if (unit.hp <= 0) {
-                    this.removeUnit(unit);
-                    this.startNextTurn();
-                    return;
-                }
+                // Final tile's trap is already handled by the original code
 
                 // Handle terrain effects
                 if (tile.terrain?.type === TerrainType.PIT) {
@@ -1075,7 +1080,6 @@ export default class CombatScene extends Phaser.Scene {
                 // Update health blocks after unit moves
                 this.units.forEach(unit => this.updateHealthBlocks(unit));
                 this.clearHighlights();
-
                 // Re-highlight new tiles if the unit still has movement points left
                 if (unit.movementPoints > 0) {
                     this.highlightMovementRange(unit, unit.movementPoints);
@@ -1087,7 +1091,21 @@ export default class CombatScene extends Phaser.Scene {
             }
 
             currentIndex++;
-            unit.moveTo(path[currentIndex]);
+            const nextTile = path[currentIndex];
+            
+            // Check for traps before moving to the tile
+            if (nextTile.isTrapped) {
+                console.log(`${unit.name} triggers a trap at (${nextTile.gridX}, ${nextTile.gridY}) while moving through!`);
+                nextTile.triggerTrap(unit);
+                // If unit died from trap, end movement
+                if (unit.hp <= 0) {
+                    this.removeUnit(unit);
+                    this.startNextTurn();
+                    return;
+                }
+            }
+
+            unit.moveTo(nextTile);
 
             // Schedule the next movement
             this.time.delayedCall(250, moveNext); // 250ms delay between each tile movement
@@ -1102,27 +1120,27 @@ export default class CombatScene extends Phaser.Scene {
         if (startTile === endTile) {
             return [startTile];
         }
-        
+
         // Initialize data structures for A* search
         const openSet: Tile[] = [startTile];
         const closedSet = new Set<Tile>();
-        
+
         // Map to store the best parent tile for each tile
         const cameFrom = new Map<Tile, Tile>();
         
         // Cost from start along best known path
         const gScore = new Map<Tile, number>();
         gScore.set(startTile, 0);
-        
+
         // Estimated total cost from start to goal through this tile
         const fScore = new Map<Tile, number>();
         fScore.set(startTile, this.heuristicCost(startTile, endTile));
-    
+
         while (openSet.length > 0) {
             // Get the tile with the lowest fScore
             let current = openSet[0];
             let lowestIndex = 0;
-            
+
             for (let i = 1; i < openSet.length; i++) {
                 const tentativeScore = fScore.get(openSet[i]) || Infinity;
                 if (tentativeScore < (fScore.get(current) || Infinity)) {
@@ -1130,16 +1148,16 @@ export default class CombatScene extends Phaser.Scene {
                     lowestIndex = i;
                 }
             }
-            
+
             // If we've reached the goal, reconstruct the path
             if (current === endTile) {
                 return this.reconstructPath(cameFrom, current);
             }
-            
+
             // Remove current from openSet and add to closedSet
             openSet.splice(lowestIndex, 1);
             closedSet.add(current);
-            
+
             // Check all neighbors
             const neighbors = this.getTileNeighbors(current);
             for (const neighbor of neighbors) {
@@ -1147,18 +1165,25 @@ export default class CombatScene extends Phaser.Scene {
                 if (closedSet.has(neighbor)) {
                     continue;
                 }
-                
-                // Skip if this neighbor is not walkable, unless it's the goal tile
-                if (!this.canMoveTo(neighbor.gridX, neighbor.gridY) && neighbor !== endTile) {
+
+                // Skip if this neighbor is not walkable or is trapped, unless it's the goal tile
+                if ((!this.canMoveTo(neighbor.gridX, neighbor.gridY) || neighbor.isTrapped) && neighbor !== endTile) {
                     continue;
                 }
-                
+
                 // Calculate movement cost for this neighbor
                 const dx = Math.abs(neighbor.gridX - current.gridX);
                 const dy = Math.abs(neighbor.gridY - current.gridY);
                 const isDiagonal = dx === 1 && dy === 1;
-                const moveCost = isDiagonal ? 2 : 1; // Diagonal movement costs 2
                 
+                // Determine movement cost based on tile type and unit abilities
+                let moveCost = isDiagonal ? 2 : 1;
+                
+                // Add extremely high cost for trapped tiles to make them avoided unless necessary
+                if (neighbor.isTrapped && neighbor !== endTile) {
+                    moveCost += 1000; // Make traps very costly to go through
+                }
+
                 // Calculate tentative gScore
                 const tentativeGScore = (gScore.get(current) || 0) + moveCost;
                 
@@ -1170,19 +1195,19 @@ export default class CombatScene extends Phaser.Scene {
                 else if (tentativeGScore >= (gScore.get(neighbor) || Infinity)) {
                     continue;
                 }
-                
+
                 // This path is the best until now, record it
                 cameFrom.set(neighbor, current);
                 gScore.set(neighbor, tentativeGScore);
                 fScore.set(neighbor, tentativeGScore + this.heuristicCost(neighbor, endTile));
             }
         }
-        
+
         // If we get here, no path was found
         console.warn(`No path found from (${startTile.gridX},${startTile.gridY}) to (${endTile.gridX},${endTile.gridY})`);
         return [startTile]; // Return just the start tile if no path
     }
-    
+
     // Helper method for A* pathfinding
     reconstructPath(cameFrom: Map<Tile, Tile>, current: Tile): Tile[] {
         const totalPath = [current];
@@ -1192,11 +1217,88 @@ export default class CombatScene extends Phaser.Scene {
         }
         return totalPath;
     }
-    
+
     // Heuristic cost estimate for A* pathfinding
     heuristicCost(tile: Tile, goal: Tile): number {
         // Using Manhattan distance as heuristic
         return Math.abs(tile.gridX - goal.gridX) + Math.abs(tile.gridY - goal.gridY);
+    }
+
+    processWalkability(map: Phaser.Tilemaps.Tilemap, objectLayer: Phaser.Tilemaps.TilemapLayer, groundLayer: Phaser.Tilemaps.TilemapLayer) {
+        this.walkableGrid = []; // Create a 2D array for walkability
+    
+        console.log("Processing walkability for map:", map.width, "x", map.height);
+
+        // Calculate the offset between tilemap coordinates and combat grid coordinates
+        const tilemapOffsetX = -58; // From tilemap position
+        const tilemapOffsetY = -23;
+        const gridOffsetX = 1.5 * GVC.CELL_SIZE; // From combat grid position
+        const gridOffsetY = 64;
+
+        // Pre-initialize the walkable grid with default walkable values (1)
+        for (let y = 0; y < GVC.GRID_HEIGHT; y++) {
+            this.walkableGrid[y] = [];
+            for (let x = 0; x < GVC.GRID_WIDTH; x++) {
+                this.walkableGrid[y][x] = 1; // Default to walkable
+            }
+        }
+
+        // Now map the tilemap walkability to our combat grid
+        for (let y = 0; y < GVC.GRID_HEIGHT; y++) {
+            for (let x = 0; x < GVC.GRID_WIDTH; x++) {
+                // Convert combat grid coordinates to pixel coordinates
+                const pixelX = gridOffsetX + x * GVC.CELL_SIZE + (GVC.CELL_SIZE / 2);
+                const pixelY = gridOffsetY + y * GVC.CELL_SIZE + (GVC.CELL_SIZE / 2);
+                
+                // Convert pixel coordinates to tilemap coordinates
+                const tilemapX = Math.floor((pixelX - tilemapOffsetX) / map.tileWidth);
+                const tilemapY = Math.floor((pixelY - tilemapOffsetY) / map.tileHeight);
+                
+                // Check if these coordinates are valid within the tilemap
+                if (tilemapX >= 0 && tilemapX < map.width && tilemapY >= 0 && tilemapY < map.height) {
+                    // Get tiles from both layers at the calculated tilemap position
+                    const groundTile = groundLayer.getTileAt(tilemapX, tilemapY);
+                    const objectTile = objectLayer.getTileAt(tilemapX, tilemapY);
+                    
+                    // Get walkability properties
+                    const groundWalkable = groundTile?.properties?.isWalkable ?? 1;
+                    const objectWalkable = objectTile?.properties?.isWalkable ?? 1;
+                    
+                    // A tile is only walkable if both layers allow it
+                    // If an object layer tile exists, it takes priority
+                    if (objectTile) {
+                        this.walkableGrid[y][x] = objectWalkable;
+                    } else {
+                        this.walkableGrid[y][x] = groundWalkable;
+                    }
+                    
+                    // Debug the mapping
+                    console.log(`Grid (${x},${y}) maps to tilemap (${tilemapX},${tilemapY}) - walkable: ${this.walkableGrid[y][x]}`);
+                }
+            }
+        }
+
+        console.log("Walkability grid generated:", this.walkableGrid);
+    }
+    
+    canMoveTo(x: number, y: number): boolean {
+        // Check basic bounds
+        if (y < 0 || y >= this.walkableGrid.length || x < 0 || x >= this.grid[0].length) {
+            return false;
+        }
+
+        // More detailed check for walkability with debug info
+        const tilemap = this.walkableGrid[y][x] === 1;
+        const runtime = this.grid[y][x].isWalkable;
+
+        // Debug for the specific problematic tiles
+        if (this.debugModeEnabled && 
+            ((x === 5 && (y === 0 || y === 1)) || (x === 6 && y === 0) || (x === 7 && y === 0))) {
+            console.log(`canMoveTo(${x},${y}): tilemap=${tilemap}, runtime=${runtime}, result=${tilemap && runtime}`);
+        }
+
+        // Both conditions must be true for the tile to be walkable
+        return tilemap && runtime;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -1218,83 +1320,7 @@ export default class CombatScene extends Phaser.Scene {
     // HIGHLIGHTING SYSTEM
     ///////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////
-    processWalkability(map: Phaser.Tilemaps.Tilemap, objectLayer: Phaser.Tilemaps.TilemapLayer, groundLayer: Phaser.Tilemaps.TilemapLayer) {
-        this.walkableGrid = []; // Create a 2D array for walkability
-    
-        console.log("Processing walkability for map:", map.width, "x", map.height);
-    
-        // Calculate the offset between tilemap coordinates and combat grid coordinates
-        const tilemapOffsetX = -58; // From tilemap position
-        const tilemapOffsetY = -23;
-        const gridOffsetX = 1.5 * GVC.CELL_SIZE; // From combat grid position
-        const gridOffsetY = 64;
-    
-        // Pre-initialize the walkable grid with default walkable values (1)
-        for (let y = 0; y < GVC.GRID_HEIGHT; y++) {
-            this.walkableGrid[y] = [];
-            for (let x = 0; x < GVC.GRID_WIDTH; x++) {
-                this.walkableGrid[y][x] = 1; // Default to walkable
-            }
-        }
-    
-        // Now map the tilemap walkability to our combat grid
-        for (let y = 0; y < GVC.GRID_HEIGHT; y++) {
-            for (let x = 0; x < GVC.GRID_WIDTH; x++) {
-                // Convert combat grid coordinates to pixel coordinates
-                const pixelX = gridOffsetX + x * GVC.CELL_SIZE + (GVC.CELL_SIZE / 2);
-                const pixelY = gridOffsetY + y * GVC.CELL_SIZE + (GVC.CELL_SIZE / 2);
-    
-                // Convert pixel coordinates to tilemap coordinates
-                const tilemapX = Math.floor((pixelX - tilemapOffsetX) / map.tileWidth);
-                const tilemapY = Math.floor((pixelY - tilemapOffsetY) / map.tileHeight);
-    
-                // Check if these coordinates are valid within the tilemap
-                if (tilemapX >= 0 && tilemapX < map.width && tilemapY >= 0 && tilemapY < map.height) {
-                    // Get tiles from both layers at the calculated tilemap position
-                    const groundTile = groundLayer.getTileAt(tilemapX, tilemapY);
-                    const objectTile = objectLayer.getTileAt(tilemapX, tilemapY);
-    
-                    // Get walkability properties
-                    const groundWalkable = groundTile?.properties?.tsWalkable ?? 1;
-                    const objectWalkable = objectTile?.properties?.tsWalkable ?? 1;
-    
-                    // A tile is only walkable if both layers allow it
-                    // If an object layer tile exists, it takes priority
-                    if (objectTile) {
-                        this.walkableGrid[y][x] = objectWalkable;
-                    } else {
-                        this.walkableGrid[y][x] = groundWalkable;
-                    }
-    
-                    // Debug the mapping
-                    console.log(`Grid (${x},${y}) maps to tilemap (${tilemapX},${tilemapY}) - walkable: ${this.walkableGrid[y][x]}`);
-                }
-            }
-        }
-    
-        console.log("Walkability grid generated:", this.walkableGrid);
-    }
-
-    canMoveTo(x: number, y: number): boolean {
-        // Check basic bounds
-        if (y < 0 || y >= this.walkableGrid.length || x < 0 || x >= this.grid[0].length) {
-            return false;
-        }
-        
-        // More detailed check for walkability with debug info
-        const tilemap = this.walkableGrid[y][x] === 1;
-        const runtime = this.grid[y][x].isWalkable;
-        
-        // Debug for the specific problematic tiles
-        if (this.debugModeEnabled && 
-            ((x === 5 && (y === 0 || y === 1)) || (x === 6 && y === 0) || (x === 7 && y === 0))) {
-            console.log(`canMoveTo(${x},${y}): tilemap=${tilemap}, runtime=${runtime}, result=${tilemap && runtime}`);
-        }
-        
-        // Both conditions must be true for the tile to be walkable
-        return tilemap && runtime;
-    }
-
+    // HIGHLIGHTING SYSTEM
     // Function to get tiles in range
     getTilesInRange(x: number, y: number, range: number): Tile[] {
         const tiles: Tile[] = [];
@@ -1305,7 +1331,6 @@ export default class CombatScene extends Phaser.Scene {
                 const diagonalSteps = Math.min(dx, dy); // Diagonal steps
                 const straightSteps = Math.abs(dx - dy); // Remaining horizontal/vertical steps
                 const distance = 2 * diagonalSteps + straightSteps; // Adjusted distance
-
                 if (distance <= range) {
                     tiles.push(tile);
                 }
@@ -1329,6 +1354,8 @@ export default class CombatScene extends Phaser.Scene {
 
     highlightMovementRange(unit: Unit, maxRange: number) {
         this.clearHighlights(); // Clear previous highlights
+        this.clearPathIndicators(); // Clear any existing path animations
+        this.validMovementTiles.clear(); // Reset the valid movement tiles set
         
         // Set of tiles that have been visited
         const visited = new Set<string>();
@@ -1337,15 +1364,13 @@ export default class CombatScene extends Phaser.Scene {
         const queue: { tile: Tile; remainingPoints: number }[] = [
             { tile: unit.position, remainingPoints: unit.movementPoints }
         ];
-        
+
         // Process tiles until queue is empty
         while (queue.length > 0) {
             const { tile, remainingPoints } = queue.shift()!;
-            
             // Skip if we've already visited this tile with equal or more movement points
             const key = `${tile.gridX},${tile.gridY}`;
             if (visited.has(key)) continue;
-            
             // Mark as visited
             visited.add(key);
             
@@ -1356,11 +1381,28 @@ export default class CombatScene extends Phaser.Scene {
                 tile.setFillStyle(tile.isTrapped ? GVC.TILE_COLOR_TRAP : GVC.TILE_COLOR_HIGHLIGHT_OK)
                     .setAlpha(GVC.TILE_ALPHA_HIGHLIGHT);
                 
-                // Make tile interactive for movement
+                // Add this tile to our valid movement tiles set
+                this.validMovementTiles.add(tile);
+                
+                // Make tile interactive for movement with path previewing
                 tile.setInteractive();
                 tile.on('pointerdown', () => {
                     console.log(`Moving to tile (${tile.gridX},${tile.gridY})`);
+                    this.clearPathIndicators(); // Clear path indicators before moving
                     this.moveUnitToTile(unit, tile);
+                });
+                
+                // Add hover events for path preview (only when in movement targeting mode)
+                tile.on('pointerover', () => {
+                    // Only show path indicators in movement targeting mode
+                    if (this.isTargetingMode && this.currentSkill === 'Move') {
+                        const path = this.calculatePath(unit.position, tile);
+                        this.showPathIndicator(path);
+                    }
+                });
+                
+                tile.on('pointerout', () => {
+                    this.clearPathIndicators();
                 });
             }
             
@@ -1384,6 +1426,9 @@ export default class CombatScene extends Phaser.Scene {
                         
                         // Use the stored reference and check if it's still there
                         neighborTile.on('pointerdown', () => {
+                            // Clear path indicators before castling to prevent memory leaks
+                            this.clearPathIndicators();
+                            
                             // Re-check that the unit is still on this tile
                             if (neighborTile.unit && neighborTile.unit === targetUnit) {
                                 this.castling(unit, targetUnit);
@@ -1399,21 +1444,18 @@ export default class CombatScene extends Phaser.Scene {
             if (remainingPoints > 0) {
                 // Get neighboring tiles
                 const neighbors = this.getTileNeighbors(tile);
-                
                 for (const neighbor of neighbors) {
                     // Calculate movement cost
                     const dx = Math.abs(neighbor.gridX - tile.gridX);
                     const dy = Math.abs(neighbor.gridY - tile.gridY);
                     const isDiagonal = dx === 1 && dy === 1;
-                    
-                    // Determine movement cost based on tile type and unit abilities
                     let cost = isDiagonal ? 2 : 1;
                     if (unit.type === 'Expert' && isDiagonal) cost = 1; // Experts move diagonally at normal cost
                     if (neighbor.terrain?.type === TerrainType.MUD) cost *= 2; // Mud doubles movement cost
                     
                     // Skip if we don't have enough movement points
                     if (remainingPoints < cost) continue;
-                    
+
                     // For exploration, we might check tiles that aren't walkable
                     // but we won't actually move to them
                     const isWalkable = this.canMoveTo(neighbor.gridX, neighbor.gridY);
@@ -1432,27 +1474,22 @@ export default class CombatScene extends Phaser.Scene {
         
         // Debug the walkability of the problem tiles
         console.log("Checking walkability of problem tiles:");
-        
-        // Helper to check and report walkability
         const checkTile = (x: number, y: number) => {
             if (x < 0 || x >= GVC.GRID_WIDTH || y < 0 || y >= GVC.GRID_HEIGHT) {
                 console.log(`Tile (${x},${y}) is out of bounds`);
                 return;
             }
-            
-            const tile = this.grid[y][x];
             const walkable = this.canMoveTo(x, y);
-            const walkableInGrid = this.walkableGrid[y][x] === 1;
+            const tile = this.grid[y][x];
             const runtimeWalkable = tile.isWalkable;
-            
+            const walkableInGrid = this.walkableGrid[y][x] === 1;
             console.log(`Tile (${x},${y}): walkable=${walkable}, walkableInGrid=${walkableInGrid}, runtimeWalkable=${runtimeWalkable}`);
-            
             // If it's not walkable but should be, highlight it differently for debugging
             if (!walkable && walkableInGrid && runtimeWalkable) {
                 tile.setFillStyle(0xffff00).setAlpha(0.5); // Yellow for oddly unwalkable tiles
             }
         };
-        
+
         // Check the problem tiles
         checkTile(5, 0);
         checkTile(5, 1);
@@ -1461,6 +1498,12 @@ export default class CombatScene extends Phaser.Scene {
     }
 
     enterModeTargeting(currentSkill: string){
+        // Clear path indicators when entering a new targeting mode
+        this.clearPathIndicators();
+        // If we're switching from Move to another mode, clear the valid tiles
+        if (this.currentSkill === 'Move' && currentSkill !== 'Move') {
+            this.validMovementTiles.clear();
+        }
         this.isTargetingMode = true;
         this.currentSkill = currentSkill;
     }
@@ -1468,6 +1511,9 @@ export default class CombatScene extends Phaser.Scene {
     leaveModeTargeting(){
         this.clearHighlights();
         this.clearActiveUnitHighlight();
+        this.clearPathIndicators(); // Ensure we clear all path indicators
+        this.validMovementTiles.clear(); // Clear valid movement tiles
+        
         if (this.popupTargetingInstance !== null) {
             this.popupTargetingInstance.destroy(); // Destroy existing popup if any
             this.popupTargetingInstance = null; // Clear the reference
@@ -1504,11 +1550,10 @@ export default class CombatScene extends Phaser.Scene {
                 .filter(tile => tile !== unit.position)
                 .includes(target.position)
         );
-
         const validTargets = [...validUnits, ...validTerrain];
 
         validTargets.forEach(target => {
-            target.sprite.setTint(0xff0000);
+            target.sprite.setTint(GVC.UNIT_COLOR_HIGHLIGHT_TARGET);
             target.sprite.setInteractive();
 
             // Set up hover events that persist
@@ -1541,13 +1586,12 @@ export default class CombatScene extends Phaser.Scene {
             { x: -1, y: -1 }, // Top-left diagonal
             { x: 1, y: -1 },  // Top-right diagonal
             { x: -1, y: 1 },  // Bottom-left diagonal
-            { x: 1, y: 1 },   // Bottom-right diagonal
+            { x: 1, y: 1 }   // Bottom-right diagonal
         ];
 
         directions.forEach(dir => {
             const neighborX = tile.gridX + dir.x;
             const neighborY = tile.gridY + dir.y;
-
             if (this.grid[neighborY]?.[neighborX]) {
                 neighbors.push(this.grid[neighborY][neighborX]);
             }
@@ -1572,6 +1616,9 @@ export default class CombatScene extends Phaser.Scene {
             console.log(`Castling failed: ${target.name} is not adjacent to ${defender.name}.`);
             return;
         }
+
+        // Clear any path indicators and stop animations to prevent memory leaks
+        this.clearPathIndicators();
 
         // Swap positions
         const defenderTile = defender.position;
@@ -1619,6 +1666,147 @@ export default class CombatScene extends Phaser.Scene {
         if (combatUI && combatUI.scene.isActive()) {
             combatUI.events.emit('moveFactionIndicator', unit, y);
         }
+    }
+
+    // Add methods for path animation
+    showPathIndicator(path: Tile[]) {
+        // Clear any existing path indicators
+        this.clearPathIndicators();
+        
+        if (path.length <= 1) return; // No path to show
+        
+        // First, calculate the total movement cost of this path
+        const currentUnit = this.initiativeQueue[this.currentUnitIndex];
+        let totalCost = 0;
+        let validPathEndIndex = path.length - 1;
+        
+        // Calculate costs for each step and determine the last valid tile in the path
+        for (let i = 1; i < path.length; i++) {
+            const current = path[i - 1];
+            const next = path[i];
+            const dx = Math.abs(next.gridX - current.gridX);
+            const dy = Math.abs(next.gridY - current.gridY);
+            const isDiagonal = dx === 1 && dy === 1;
+            let stepCost = isDiagonal ? 2 : 1;
+            if (currentUnit.type === 'Expert' && isDiagonal) stepCost = 1;
+            if (next.terrain?.type === TerrainType.MUD) stepCost += 1;
+            
+            totalCost += stepCost;
+            
+            // Check if we've exceeded available movement points
+            if (totalCost > currentUnit.movementPoints) {
+                validPathEndIndex = i - 1; // Last valid tile
+                break;
+            }
+        }
+        
+        // Now only show indicators up to the valid end tile
+        for (let i = 1; i <= validPathEndIndex; i++) {
+            const tile = path[i];
+            
+            // Extra validation: only show indicators for tiles in the valid movement set
+            if (!this.validMovementTiles.has(tile) && i < path.length - 1) {
+                continue;
+            }
+            
+            // Create a graphics object for the indicator
+            const indicator = this.add.graphics();
+            
+            // Square indicators (116x116px)
+            indicator.fillStyle(0xffffff, 0.7);
+            indicator.fillRect(
+                tile.x, 
+                tile.y, 
+                116, 
+                116
+            );
+            
+            indicator.setAlpha(0.125);
+            indicator.setDepth(5);
+            
+            // Store the graphics object in our array
+            this.pathIndicators.push(indicator);
+        }
+        
+        // Only animate if we have indicators to show
+        if (this.pathIndicators.length > 0) {
+            this.animatePathIndicators();
+        }
+    }
+
+    clearPathIndicators() {
+        // Make sure to mark animation as inactive first
+        this.pathAnimationActive = false;
+        
+        // Then stop any active tween
+        if (this.pathAnimationTween) {
+            this.pathAnimationTween.stop();
+            this.pathAnimationTween = null;
+        }
+        
+        // Finally destroy all indicators
+        this.pathIndicators.forEach(indicator => {
+            if (indicator && indicator.active) {
+                indicator.destroy();
+            }
+        });
+        this.pathIndicators = [];
+    }
+
+    animatePathIndicators() {
+        if (this.pathIndicators.length === 0) return;
+        
+        this.pathAnimationActive = true;
+        let currentIndex = 0;
+        
+        // Reset all indicators
+        this.pathIndicators.forEach(ind => ind.setAlpha(0.125));
+        
+        // Function to animate the next indicator
+        const animateNext = () => {
+            // If animation was stopped or we're out of indicators
+            if (!this.pathAnimationActive || this.pathIndicators.length === 0) return;
+            
+            // Make sure currentIndex is valid
+            if (currentIndex >= this.pathIndicators.length) {
+                currentIndex = 0;
+            }
+            
+            // Get the current indicator
+            const indicator = this.pathIndicators[currentIndex];
+            
+            // Make sure the indicator still exists
+            if (!indicator || !indicator.active) {
+                // Skip to the next indicator if this one is gone
+                currentIndex = (currentIndex + 1) % Math.max(this.pathIndicators.length, 1);
+                this.time.delayedCall(67, animateNext);
+                return;
+            }
+            
+            this.pathAnimationTween = this.tweens.add({
+                targets: indicator,
+                alpha: { from: 0.375, to: 1 },
+                duration: 125, 
+                yoyo: true,
+                onComplete: () => {
+                    // Make sure the indicator still exists and animation is active
+                    if (this.pathAnimationActive && indicator && indicator.active) {
+                        indicator.setAlpha(0.5625);
+                    }
+                    
+                    // Move to the next indicator or back to the beginning
+                    currentIndex = (currentIndex + 1) % Math.max(this.pathIndicators.length, 1);
+                    
+                    // Only schedule next animation if we're still active
+                    if (this.pathAnimationActive) {
+                        this.time.delayedCall(67, animateNext);
+                    }
+                }
+            });
+        };
+        
+        // Start the animation
+        animateNext();
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -1708,10 +1896,15 @@ export default class CombatScene extends Phaser.Scene {
         }
     }
 
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+    // DEBUGGING SYSTEM
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////////
     // Improved method to draw debug alignment grid
     drawDebugAlignmentGrid() {
         console.log("Drawing debug alignment grid");
-        
+
         // Clear old debug elements first
         this.debugElements.forEach(element => element.destroy());
         this.debugElements = [];
@@ -1737,7 +1930,7 @@ export default class CombatScene extends Phaser.Scene {
             const posX = offsetX + x * GVC.CELL_SIZE;
             graphics.lineBetween(posX, offsetY, posX, offsetY + gridHeightPx);
         }
-        
+
         // Position for debug info panel (bottom left, 150px from bottom)
         const debugTextX = 20;
         const debugTextY = (this.sys.game.config.height as number) - 150;
@@ -1813,9 +2006,6 @@ export default class CombatScene extends Phaser.Scene {
         } catch (error) {
             console.error("Error accessing tilemap:", error);
         }
-        
-        graphics.strokePath();
-        graphics.setDepth(30); // Set high depth to ensure visibility
 
         // Add visual indicators for non-walkable tiles in the walkability grid
         if (this.walkableGrid && this.walkableGrid.length > 0) {
@@ -1859,18 +2049,15 @@ export default class CombatScene extends Phaser.Scene {
         });
     }
 
-    // Toggle debug mode
     toggleDebugMode() {
         this.debugModeEnabled = !this.debugModeEnabled;
-        
         if (this.debugToggleButton) {
             this.debugToggleButton.setText(this.debugModeEnabled ? "DEBUG: ON" : "DEBUG: OFF");
             this.debugToggleButton.setColor(this.debugModeEnabled ? '#00ff00' : '#ff0000');
         }
-        
+
         // Toggle visibility of all debug elements with a type check
         this.debugElements.forEach(element => {
-            // Check if the element has a setVisible method before calling it
             if ('setVisible' in element) {
                 (element as any).setVisible(this.debugModeEnabled);
             }
@@ -1884,7 +2071,5 @@ export default class CombatScene extends Phaser.Scene {
 
     /* END-USER-CODE */
 }
-
-/* END OF COMPILED CODE */
 
 

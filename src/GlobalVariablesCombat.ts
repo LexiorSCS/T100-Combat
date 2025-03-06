@@ -18,6 +18,7 @@ export const TILE_COLOR_HIGHLIGHT_CASTLING = 0x800080; // Purple (castling highl
 
 // Unit Highlight Colors
 export const UNIT_COLOR_HIGHLIGHT_CURRENT = 0xebfc00; // Yellow (unit highlight while it is its current turn)
+export const UNIT_COLOR_HIGHLIGHT_TARGET = 0xff0000; // Red (unit highlight while it is a target)
 
 
 // Trap Tile Colors
