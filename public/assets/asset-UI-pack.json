@@ -2,6 +2,26 @@
     "section1": {
         "files": [
             {
+                "url": "assets/Element_Crystal_E.png",
+                "type": "image",
+                "key": "Element_Crystal_E"
+            },
+            {
+                "url": "assets/Element_Crystal_F.png",
+                "type": "image",
+                "key": "Element_Crystal_F"
+            },
+            {
+                "url": "assets/Element_Crystal_N.png",
+                "type": "image",
+                "key": "Element_Crystal_N"
+            },
+            {
+                "url": "assets/Element_Crystal_W.png",
+                "type": "image",
+                "key": "Element_Crystal_W"
+            },
+            {
                 "url": "assets/UI_Mark_B.png",
                 "type": "image",
                 "key": "UI_Mark_B"
@@ -25,6 +45,16 @@
                 "url": "assets/UI_Mark_Y.png",
                 "type": "image",
                 "key": "UI_Mark_Y"
+            },
+            {
+                "url": "assets/UI_Target_G.png",
+                "type": "image",
+                "key": "UI_Target_G"
+            },
+            {
+                "url": "assets/UI_Target_R.png",
+                "type": "image",
+                "key": "UI_Target_R"
             },
             {
                 "url": "assets/UI_Trap_B.png",

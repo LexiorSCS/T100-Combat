@@ -8,7 +8,7 @@
 		import { TerrainType } from './Terrain';
 // Import the Phaser Scene for use in the Tile Class.
 		import CombatScene from '../../scenes/CombatScene';
-///////////////////////////////////////////////////////////////////////////////////////////////
+	///////////////////////////////////////////////////////////////////////////////////////////////
 	///////////////////////////////////////////////////////////////////////////////////////////////
 		 // Combat Grid Tile configuration.
 		 // Defines what a default interactive tile is, including being walkable by default.
@@ -21,7 +21,9 @@
 	   faction: number;
 	   gridX: number;
 	   gridY: number;
-	   terrain: Terrain | null = null; // Add this line to define the terrain property
+	   terrain: Terrain | null = null; // Add this line to define the terrain property and check for collision
+	   unit: Unit | null = null; // Add this line to define the unit property and check for collision
+	   isHazard: boolean = false; // Add this line to define the hazard property
 	   // Trap properties
 	   isTrapped: boolean = false;
 	   		 trapSprite: Phaser.GameObjects.Sprite | null = null; // Sprite for the trap visual
@@ -32,7 +34,7 @@
 
 	constructor(scene: Phaser.Scene, x: number, y: number, size: number, gridX: number, gridY: number) 
 	   {
-		   super(scene, x, y, size, size, GVC.TILE_COLOR_DEFAULT); // Default color (light gray)
+		   super(scene, x, y, size, size, GVC.TILE_COLOR_DEFAULT, GVC.TILE_ALPHA_DEFAULT);
 		   this.gridX = gridX;
 		   this.gridY = gridY;
 		   scene.add.existing(this);
@@ -40,6 +42,7 @@
 		   this.isWalkable = true; // Default to walkable
 		   this.faction = -1; // Default to no faction
 		   this.terrain = null; // Initialize terrain as null
+		   this.isHazard = false; // Initialize hazard as false
 
 		// Initialize hovering UI elements
 		this.hoverSprite = this.scene.add.sprite(this.x + this.width / 2, this.y + this.height / 2, 'UI_Mark_W');
@@ -68,6 +71,24 @@
 
 			this.on('pointerout', () => this.setFillStyle(ogFillStyle)); // Revert to the original fill style on exit*/
 	   }
+
+	   resetTileState() {
+        // Only reset if there's no terrain or hazard
+        if (!this.terrain && !this.isHazard) {
+            this.isWalkable = true;
+        }
+        this.unit = null;
+    }
+
+	// Override the setInteractive method to ensure proper event handling
+    setInteractive() {
+        super.setInteractive();
+        // Make sure the tile is actually interactive
+		if (this.input) {
+			this.input.enabled = true;
+		}
+        return this;
+    }
 
 	   // Hover event handlers
 	   onHover() {
@@ -113,7 +134,7 @@
 
 		// Trapper SetTrap methods UI indicators
 		setTrapVisual(faction: number) {
-			this.setFillStyle(GVC.TILE_COLOR_TRAP, 0.8); // Slight Gold tint for trapped tile visual
+			this.setFillStyle(GVC.TILE_COLOR_TRAP, 0.7); // Slight Gold tint for trapped tile visual
 			
 			let spriteKey = '';
 			switch (faction) {
@@ -145,7 +166,7 @@
 		}
 		
 		clearTrapVisual() {
-			this.setFillStyle(GVC.TILE_COLOR_DEFAULT); // Reset to default
+			this.setFillStyle(GVC.TILE_COLOR_DEFAULT).setAlpha(GVC.TILE_ALPHA_DEFAULT); // Reset to default
 
 			if (this.trapSprite) {
 				this.trapSprite.destroy();

@@ -30,11 +30,6 @@
                 "url": "assets/R_Lava_M.png",
                 "type": "image",
                 "key": "R_Lava_M"
-            },
-            {
-                "url": "assets/Tile2_28.png",
-                "type": "image",
-                "key": "Tile2_28"
             }
         ]
     },
