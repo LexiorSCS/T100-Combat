@@ -1,0 +1,38 @@
+{
+    "section1": {
+        "files": [
+            {
+                "url": {
+                    "IMG": "assets/Tileset_Farm.png"
+                },
+                "type": "texture",
+                "key": "Tileset_Farm"
+            },
+            {
+                "url": {
+                    "IMG": "assets/Tileset_Field.png"
+                },
+                "type": "texture",
+                "key": "Tileset_Field"
+            },
+            {
+                "url": "assets/ts_Farm00Field.tsx",
+                "type": "binary",
+                "key": "ts_Farm00Field"
+            },
+            {
+                "url": "assets/ts_Farm01Crops.tsx",
+                "type": "binary",
+                "key": "ts_Farm01Crops"
+            }
+        ]
+    },
+    "meta": {
+        "app": "Phaser Editor 2D - Asset Pack Editor",
+        "contentType": "phasereditor2d.pack.core.AssetContentType",
+        "url": "https://phasereditor2d.com",
+        "version": 2,
+        "showAllFilesInBlocks": false,
+        "visible": true
+    }
+}

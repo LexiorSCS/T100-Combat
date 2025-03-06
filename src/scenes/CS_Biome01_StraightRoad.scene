@@ -1,0 +1,68 @@
+{
+    "id": "e875ac65-2f89-4cfa-bad5-65599c85e671",
+    "sceneType": "SCENE",
+    "settings": {
+        "snapWidth": 116,
+        "snapHeight": 116,
+        "exportClass": true,
+        "autoImport": true,
+        "preloadPackFiles": [],
+        "createMethodName": "editorCreate",
+        "sceneKey": "CS_Biome01_StraightRoad",
+        "compilerOutputLanguage": "TYPE_SCRIPT",
+        "borderWidth": 1280,
+        "borderHeight": 760
+    },
+    "displayList": [
+        {
+            "type": "TilemapLayer",
+            "id": "e96ee7d3-a2b0-4828-b1ab-cdc212154ab4",
+            "label": "ground",
+            "x": -58,
+            "y": -22.5,
+            "tilemapId": "b399a29d-83a2-4b98-9618-8a3fc8927d57",
+            "layerName": "Ground00",
+            "tilesets": [
+                "Farm00Field",
+                "ts_Farm01Crops"
+            ]
+        },
+        {
+            "type": "TilemapLayer",
+            "id": "f1959191-5bb6-4c70-a8f0-490e82074b96",
+            "label": "crops",
+            "x": -58,
+            "y": -22.5,
+            "tilemapId": "b399a29d-83a2-4b98-9618-8a3fc8927d57",
+            "layerName": "Crops00",
+            "tilesets": [
+                "Farm00Field",
+                "ts_Farm01Crops"
+            ]
+        }
+    ],
+    "plainObjects": [
+        {
+            "id": "b399a29d-83a2-4b98-9618-8a3fc8927d57",
+            "type": "Tilemap",
+            "label": "m_CS_B01_StraightR02",
+            "key": "m_CS_B01_StraightR02",
+            "tilesets": [
+                {
+                    "name": "Farm00Field",
+                    "imageKey": "Tileset_Field"
+                },
+                {
+                    "name": "ts_Farm01Crops",
+                    "imageKey": "Tileset_Farm"
+                }
+            ]
+        }
+    ],
+    "meta": {
+        "app": "Phaser Editor - Scene Editor",
+        "url": "https://phaser.io/editor",
+        "contentType": "phasereditor2d.core.scene.SceneContentType",
+        "version": 5
+    }
+}

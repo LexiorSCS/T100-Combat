@@ -1,0 +1,109 @@
+{
+    "section1": {
+        "files": [
+            {
+                "url": "assets/T_Aandhee_E.png",
+                "type": "image",
+                "key": "T_Aandhee_E"
+            },
+            {
+                "url": "assets/T_Aandhee_F.png",
+                "type": "image",
+                "key": "T_Aandhee_F"
+            },
+            {
+                "url": "assets/T_Aandhee_W.png",
+                "type": "image",
+                "key": "T_Aandhee_W"
+            },
+            {
+                "url": "assets/T_CoachPotato_N.png",
+                "type": "image",
+                "key": "T_CoachPotato_N"
+            },
+            {
+                "url": "assets/T_Huntress_E.png",
+                "type": "image",
+                "key": "T_Huntress_E"
+            },
+            {
+                "url": "assets/T_Huntress_F.png",
+                "type": "image",
+                "key": "T_Huntress_F"
+            },
+            {
+                "url": "assets/T_Huntress_W.png",
+                "type": "image",
+                "key": "T_Huntress_W"
+            },
+            {
+                "url": "assets/T_Linda_E.png",
+                "type": "image",
+                "key": "T_Linda_E"
+            },
+            {
+                "url": "assets/T_Linda_F.png",
+                "type": "image",
+                "key": "T_Linda_F"
+            },
+            {
+                "url": "assets/T_Linda_W.png",
+                "type": "image",
+                "key": "T_Linda_W"
+            },
+            {
+                "url": "assets/T_Penumbra_E.png",
+                "type": "image",
+                "key": "T_Penumbra_E"
+            },
+            {
+                "url": "assets/T_Penumbra_F.png",
+                "type": "image",
+                "key": "T_Penumbra_F"
+            },
+            {
+                "url": "assets/T_Penumbra_W.png",
+                "type": "image",
+                "key": "T_Penumbra_W"
+            },
+            {
+                "url": "assets/T_Sniper_E.png",
+                "type": "image",
+                "key": "T_Sniper_E"
+            },
+            {
+                "url": "assets/T_Sniper_F.png",
+                "type": "image",
+                "key": "T_Sniper_F"
+            },
+            {
+                "url": "assets/T_Sniper_W.png",
+                "type": "image",
+                "key": "T_Sniper_W"
+            },
+            {
+                "url": "assets/T_Tamer_E.png",
+                "type": "image",
+                "key": "T_Tamer_E"
+            },
+            {
+                "url": "assets/T_Tamer_F.png",
+                "type": "image",
+                "key": "T_Tamer_F"
+            },
+            {
+                "url": "assets/T_Tamer_W.png",
+                "type": "image",
+                "key": "T_Tamer_W"
+            }
+        ]
+    },
+    "meta": {
+        "app": "Phaser Editor 2D - Asset Pack Editor",
+        "contentType": "phasereditor2d.pack.core.AssetContentType",
+        "url": "https://phasereditor2d.com",
+        "version": 2,
+        "showAllFilesInBlocks": false,
+        "visible": true
+    }
+}

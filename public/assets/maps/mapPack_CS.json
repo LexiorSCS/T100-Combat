@@ -1,0 +1,29 @@
+{
+    "section1": {
+        "files": [
+            {
+                "url": "assets/maps/m_CS_B01_StraightR02.json",
+                "type": "tilemapTiledJSON",
+                "key": "m_CS_B01_StraightR02"
+            },
+            {
+                "url": "assets/maps/Tileset_Farm.png",
+                "type": "image",
+                "key": "Tileset_Farm"
+            },
+            {
+                "url": "assets/maps/Tileset_Field.png",
+                "type": "image",
+                "key": "Tileset_Field"
+            }
+        ]
+    },
+    "meta": {
+        "app": "Phaser Editor 2D - Asset Pack Editor",
+        "contentType": "phasereditor2d.pack.core.AssetContentType",
+        "url": "https://phasereditor2d.com",
+        "version": 2,
+        "showAllFilesInBlocks": false,
+        "visible": true
+    }
+}

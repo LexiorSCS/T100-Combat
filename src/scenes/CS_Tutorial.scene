@@ -1,0 +1,90 @@
+{
+    "id": "280a2bb7-7eac-46cd-a7d8-e7dcdf06dfe9",
+    "sceneType": "SCENE",
+    "settings": {
+        "snapEnabled": true,
+        "snapWidth": 116,
+        "snapHeight": 116,
+        "exportClass": true,
+        "autoImport": true,
+        "preloadPackFiles": [],
+        "createMethodName": "editorCreate",
+        "sceneKey": "CS_Tutorial",
+        "compilerOutputLanguage": "TYPE_SCRIPT",
+        "borderWidth": 1280,
+        "borderHeight": 760
+    },
+    "displayList": [
+        {
+            "type": "EditableTilemapLayer",
+            "id": "ad15fbe5-5402-4664-8daa-c56d09d5b1a0",
+            "label": "ground",
+            "x": -58,
+            "y": -22.5,
+            "tilemapId": "64ce16be-67f4-48cb-adb3-e85bba250e9c"
+        },
+        {
+            "type": "EditableTilemapLayer",
+            "id": "307055a9-6714-4a9a-ba21-6f322a329963",
+            "label": "ground2",
+            "x": -58,
+            "y": -22.5,
+            "tilemapId": "64ce16be-67f4-48cb-adb3-e85bba250e9c"
+        }
+    ],
+    "plainObjects": [
+        {
+            "id": "64ce16be-67f4-48cb-adb3-e85bba250e9c",
+            "type": "EditableTilemap",
+            "label": "FarmTileset",
+            "width": 12,
+            "height": 7,
+            "tileWidth": 116,
+            "tileHeight": 116,
+            "tilesets": [
+                {
+                    "name": "Tileset_Field",
+                    "imageKey": "Tileset_Field",
+                    "tileWidth": 116,
+                    "tileHeight": 116,
+                    "tileMargin": 0,
+                    "tileSpacing": 0
+                },
+                {
+                    "name": "Tileset_Farm",
+                    "imageKey": "Tileset_Farm",
+                    "tileWidth": 116,
+                    "tileHeight": 116,
+                    "tileMargin": 0,
+                    "tileSpacing": 0
+                }
+            ],
+            "paintLayerId": "307055a9-6714-4a9a-ba21-6f322a329963",
+            "paintTileset": "Tileset_Farm",
+            "layers": [
+                {
+                    "name": "ground",
+                    "data": "[38,38,38,38,38,38,38,38,38,38,38,38,38,38,38,38,38,38,38,38,38,38,38,38,35,36,35,36,35,36,35,36,35,35,36,35,11,27,11,11,27,11,27,11,27,11,27,27,23,3,23,3,3,3,64,3,3,23,3,3,38,38,38,38,38,38,38,38,38,38,38,38,38,38,38,38,38,38,38,38,38,38,38,38]",
+                    "width": 12,
+                    "height": 7,
+                    "tileWidth": 116,
+                    "tileHeight": 116
+                },
+                {
+                    "name": "ground2",
+                    "data": "[75,76,82,83,0,0,80,82,83,0,0,74,80,83,0,0,0,0,0,0,0,0,0,80,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,65,0,0,0,0,0,0,0,0,65,67,66,84]",
+                    "width": 12,
+                    "height": 7,
+                    "tileWidth": 116,
+                    "tileHeight": 116
+                }
+            ]
+        }
+    ],
+    "meta": {
+        "app": "Phaser Editor - Scene Editor",
+        "url": "https://phaser.io/editor",
+        "contentType": "phasereditor2d.core.scene.SceneContentType",
+        "version": 5
+    }
+}
