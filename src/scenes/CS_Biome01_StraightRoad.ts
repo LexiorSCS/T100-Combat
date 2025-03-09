@@ -50,7 +50,13 @@ export default class CS_Biome01_StraightRoad extends Phaser.Scene {
 		
 		// Use the existing tilemap reference instead of creating a new one
 		const map = this.m_CS_B01_StraightR02;
-		
+		////////////////////////////////////////////////////////////////////////
+		////////////////////////////////////////////////////////////////////////
+		// TILESET DEBUGGING
+		////////////////////////////////////////////////////////////////////////
+		////////////////////////////////////////////////////////////////////////
+		// Add debug to see available tilesets
+		console.log("Available tilesets:", map.tilesets.map(tileset => tileset.name));
 		// Add debug to see available layers
 		console.log("Available layers:", map.layers.map(layer => layer.name));
 		
@@ -64,7 +70,8 @@ export default class CS_Biome01_StraightRoad extends Phaser.Scene {
 		
 		if (!groundLayer || !cropsLayer) {
 			console.error("Error: Missing layers in the imported map!");
-			return;
+			if (!groundLayer) console.warn("Ground layer is missing!");
+			if (!cropsLayer) console.warn("Crops layer is missing!");
 		}
 		
 		// Use the tilemap layers for processing
